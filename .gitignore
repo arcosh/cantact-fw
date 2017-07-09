@@ -1,1 +1,14 @@
+# generated
 build/*
+*.o
+*.lo
+*.la
+*.elf
+*.map
+
+# Eclipse
+.project
+.cproject
+.settings
+.metadata
+
