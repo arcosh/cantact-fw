@@ -141,24 +141,24 @@ int8_t slcan_parse_str(uint8_t *buf, uint8_t len) {
         return 0;
 
     } else if (buf[0] == 'F') {
-	// set filter command
-	uint32_t id = 0;
-	for (i = 1; i < len; i++) {
-	    id *= 16;
-	    id += buf[i];
-	}
-	current_filter_id = id;
-	can_set_filter(current_filter_id, current_filter_mask);
+        // set filter command
+        uint32_t id = 0;
+        for (i = 1; i < len; i++) {
+            id *= 16;
+            id += buf[i];
+        }
+        current_filter_id = id;
+        can_set_filter(current_filter_id, current_filter_mask);
 
     } else if (buf[0] == 'K') {
-	// set mask command
-	uint32_t mask = 0;
-	for (i = 1; i < len; i++) {
-	    mask *= 16;
-	    mask += buf[i];
-	}
-	current_filter_mask = mask;
-	can_set_filter(current_filter_id, current_filter_mask);
+        // set mask command
+        uint32_t mask = 0;
+        for (i = 1; i < len; i++) {
+            mask *= 16;
+            mask += buf[i];
+        }
+        current_filter_mask = mask;
+        can_set_filter(current_filter_id, current_filter_mask);
 
     } else if (buf[0] == 't' || buf[0] == 'T') {
         // transmit data frame command
