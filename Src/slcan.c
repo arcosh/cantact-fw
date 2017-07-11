@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Library to interpret and generate serial CAN (SLCAN) messages
+ */
+
 #include "stm32f0xx_hal.h"
 #include "can.h"
 #include "slcan.h"
