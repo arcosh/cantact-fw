@@ -53,6 +53,7 @@ RANLIB = arm-none-eabi-ranlib
 SIZE = arm-none-eabi-size
 OBJCOPY = arm-none-eabi-objcopy
 MKDIR = mkdir -p
+DOXYGEN = doxygen
 #######################################
 
 # core and CPU type for Cortex M0
@@ -90,6 +91,10 @@ all: $(BUILD_DIR)/$(TARGET).bin $(BUILD_DIR)/$(TARGET).hex
 
 flash: all
 	sudo dfu-util -d 0483:df11 -c 1 -i 0 -a 0 -s 0x08000000 -D $(BUILD_DIR)/$(TARGET).bin
+
+.PHONY: doc
+doc:
+	$(DOXYGEN)
 
 
 #######################################
