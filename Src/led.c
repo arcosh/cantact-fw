@@ -1,12 +1,21 @@
-//
-// LED: Handles blinking of status light
-//
+/**
+ * @file
+ * @brief Library to handle LED blinking
+ */
 
 #include "stm32f0xx_hal.h"
 #include "led.h"
 
+/**
+ * Tick count, when LED was last switched on
+ */
 static uint32_t led_laston = 0;
+
+/**
+ * Tick count, when LED was last switched off
+ */
 static uint32_t led_lastoff = 0;
+
 
 // Attempt to turn on status LED
 void led_on(void)
@@ -32,4 +41,3 @@ void led_process(void)
 		led_lastoff = HAL_GetTick();
 	}
 }
-
