@@ -1,9 +1,9 @@
 /**
   ******************************************************************************
-  * @file           : USB_DEVICE
-  * @date           : 05/12/2014 20:22:27  
-  * @version        : v1.0_Cube
-  * @brief          : This file implements the USB Device 
+  * @file           usb_device.c
+  * @date           05/12/2014 20:22:27
+  * @version        v1.0_Cube
+  * @brief          This file implements the USB device
   ******************************************************************************
   *
   * COPYRIGHT(c) 2014 STMicroelectronics

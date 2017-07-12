@@ -1,10 +1,10 @@
 /**
   ******************************************************************************
-  * @file           : usbd_cdc_if.h
-  * @author         : MCD Application Team
-  * @version        : V1.1.0
-  * @date           : 19-March-2012
-  * @brief          : Header for usbd_cdc_if file.
+  * @file           usbd_cdc_if.h
+  * @author         MCD Application Team
+  * @version        V1.1.0
+  * @date           19-March-2012
+  * @brief          Header file for @ref usbd_cdc_if.c
   ******************************************************************************
   * COPYRIGHT(c) 2014 STMicroelectronics
   *

@@ -1,9 +1,9 @@
 /**
   ******************************************************************************
-  * @file           : USB_DEVICE
-  * @date           : 05/12/2014 20:22:27  
-  * @version        : v1.0_Cube
-  * @brief          : Header for usb_device file.
+  * @file           usb_device.h
+  * @date           05/12/2014 20:22:27
+  * @version        v1.0_Cube
+  * @brief          Header file for @ref usb_device.c
   ******************************************************************************
   * COPYRIGHT(c) 2014 STMicroelectronics
   *

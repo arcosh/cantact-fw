@@ -1,10 +1,10 @@
 /**
 ******************************************************************************
-* @file           : usbd_cdc_if.c
-* @author         : MCD Application Team
-* @version        : V1.1.0
-* @date           : 19-March-2012
-* @brief          :
+* @file           usbd_cdc_if.c
+* @author         MCD Application Team
+* @version        V1.1.0
+* @date           19-March-2012
+* @brief          This file implements the USB CDC interface
 ******************************************************************************
 * COPYRIGHT(c) 2014 STMicroelectronics
 *

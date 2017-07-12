@@ -1,8 +1,8 @@
 /**
 ******************************************************************************
-* File Name          : main.c
-* Date               : 05/12/2014 20:22:28
-* Description        : Main program body
+* @file              main.c
+* @date              05/12/2014 20:22:28
+* @brief             Main program body
 ******************************************************************************
 *
 * COPYRIGHT(c) 2014 STMicroelectronics

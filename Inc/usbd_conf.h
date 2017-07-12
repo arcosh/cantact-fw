@@ -1,9 +1,9 @@
 /**
   ******************************************************************************
-  * @file           : usbd_conf.h
-  * @date           : 05/12/2014 20:22:27
-  * @version        : v1.0_Cube
-  * @brief          : Header for usbd_conf file.
+  * @file           usbd_conf.h
+  * @date           05/12/2014 20:22:27
+  * @version        v1.0_Cube
+  * @brief          Header file for @ref usbd_conf.c
   ******************************************************************************
   * COPYRIGHT(c) 2014 STMicroelectronics
   *

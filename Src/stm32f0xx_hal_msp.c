@@ -1,9 +1,9 @@
 /**
   ******************************************************************************
-  * File Name          : stm32f0xx_hal_msp.c
-  * Date               : 05/12/2014 20:22:27
-  * Description        : This file provides code for the MSP Initialization
-  *                      and de-Initialization codes.
+  * @file              stm32f0xx_hal_msp.c
+  * @date              05/12/2014 20:22:27
+  * @brief             This file contains MCU Support Package (MSP)
+  *                    initialization and de-initialization functions.
   ******************************************************************************
   *
   * COPYRIGHT(c) 2014 STMicroelectronics
