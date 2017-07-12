@@ -1,8 +1,17 @@
+/**
+ * @file
+ * @brief This file implements functions to configure and use the Controller Area Network (CAN) bus
+ */
+
 #include "stm32f0xx_hal.h"
 #include "can.h"
 #include "led.h"
 
+/**
+ * Handle to access the MCU's CAN peripheral
+ */
 CAN_HandleTypeDef hcan;
+
 CAN_FilterConfTypeDef filter;
 uint32_t prescaler;
 enum can_bus_state bus_state;
