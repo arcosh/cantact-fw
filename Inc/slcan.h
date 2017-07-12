@@ -22,6 +22,65 @@
 /** Length of the extended CAN ID */
 #define SLCAN_EXT_ID_LEN 8
 
+
+/**
+ * Serial CAN message types
+ *
+ * The SLCAN protocol was specified by Lawicel AB, Sweden,
+ * for their CAN232 and CANUSB adapters.
+ * Several products exist on the market,
+ * which use the protocol and add their own extensions,
+ * including CANtact, USBTIN and Mictronics USB-CAN.
+ *
+ * @attention
+ * The following specification collisions exist:
+ * 'A': between Lawicel CAN232 and Mictronics CAN-USB
+ * 'm': between Lawicel CAN232 and CANtact
+ * 'M': between Lawicel CAN232 and CANtact
+ */
+enum slcan_message_type {
+    SLCAN_OPEN_CHANNEL = 'O',
+    SLCAN_CLOSE_CHANNEL = 'C',
+
+    SLCAN_GET_HARDWARE_VERSION = 'V',
+    SLCAN_GET_FIRMWARE_VERSION = 'v',
+    SLCAN_GET_SERIAL_NUMBER = 'N',
+
+    SLCAN_SET_BITRATE_CANONICAL = 'S',
+    SLCAN_SET_BITRATE_ARBITRARY = 's',
+
+    SLCAN_GET_STATUS = 'F',
+    SLCAN_SET_TIMESTAMPING = 'Z',
+
+    SLCAN_TRANSMIT_STANDARD = 't',
+    SLCAN_TRANSMIT_EXTENDED = 'T',
+    SLCAN_TRANSMIT_REQUEST_STANDARD = 'r',
+    SLCAN_TRANSMIT_REQUEST_EXTENDED = 'R',
+
+    SLCAN_SET_UART_BAUDRATE = 'U',
+    SLCAN_FIFO_POLL_SINGLE = 'P',
+    SLCAN_FIFO_POLL_ALL = 'A',
+    SLCAN_SET_AUTOPOLL = 'X',
+
+    SLCAN_SET_FILTER_MODE = 'W',
+    SLCAN_SET_ACCEPTANCE_MASK = 'm',
+    SLCAN_SET_ACCEPTANCE_CODE = 'M',
+    SLCAN_SET_AUTOSTARTUP = 'Q',
+
+    CANTACT_SET_MODE1 = 'm',
+    CANTACT_SET_MODE2 = 'M',
+    CANTACT_SET_FILTER = 'F',
+    CANTACT_SET_MASK = 'K',
+
+    USBTIN_OPEN_LOOPBACK = 'I',
+    USBTIN_OPEN_LISTEN_ONLY = 'L',
+    USBTIN_READ_REGISTER = 'G',
+    USBTIN_WRITE_REGISTER = 'W',
+
+    MICTRONICS_GET_ERROR = 'E',
+};
+
+
 /**
  * @brief  Parses CAN frame and generates SLCAN message
  * @param  buf:   Pointer to SLCAN message buffer
