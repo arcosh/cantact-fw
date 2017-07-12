@@ -12,9 +12,16 @@
  */
 CAN_HandleTypeDef hcan;
 
-CAN_FilterConfTypeDef filter;
-uint32_t prescaler;
-enum can_bus_state bus_state;
+/**
+ * Clock prescaler for CAN peripheral
+ */
+static uint32_t prescaler;
+
+/**
+ * Current state of the CAN peripheral (on or off)
+ */
+static enum can_bus_state bus_state;
+
 
 void can_init(void) {
     // default to 125 kbit/s
@@ -24,6 +31,8 @@ void can_init(void) {
 }
 
 void can_set_filter(uint32_t id, uint32_t mask) {
+    CAN_FilterConfTypeDef filter;
+
     // see page 825 of RM0091 for details on filters
     // set the standard ID part
     filter.FilterIdHigh = (id & 0x7FF) << 5;
