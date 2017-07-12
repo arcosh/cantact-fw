@@ -47,27 +47,27 @@ void can_set_filter(uint32_t id, uint32_t mask) {
     filter.FilterActivation = ENABLE;
 
     if (bus_state == ON_BUS) {
-	HAL_CAN_ConfigFilter(&hcan, &filter);
+        HAL_CAN_ConfigFilter(&hcan, &filter);
     }
 }
 
 void can_enable(void) {
     if (bus_state == OFF_BUS) {
-	hcan.Init.Prescaler = prescaler;
-	hcan.Init.Mode = CAN_MODE_NORMAL;
-	hcan.Init.SJW = CAN_SJW_1TQ;
-	hcan.Init.BS1 = CAN_BS1_4TQ;
-	hcan.Init.BS2 = CAN_BS2_3TQ;
-	hcan.Init.TTCM = DISABLE;
-	hcan.Init.ABOM = DISABLE;
-	hcan.Init.AWUM = DISABLE;
-	hcan.Init.NART = DISABLE;
-	hcan.Init.RFLM = DISABLE;
-	hcan.Init.TXFP = DISABLE;
+        hcan.Init.Prescaler = prescaler;
+        hcan.Init.Mode = CAN_MODE_NORMAL;
+        hcan.Init.SJW = CAN_SJW_1TQ;
+        hcan.Init.BS1 = CAN_BS1_4TQ;
+        hcan.Init.BS2 = CAN_BS2_3TQ;
+        hcan.Init.TTCM = DISABLE;
+        hcan.Init.ABOM = DISABLE;
+        hcan.Init.AWUM = DISABLE;
+        hcan.Init.NART = DISABLE;
+        hcan.Init.RFLM = DISABLE;
+        hcan.Init.TXFP = DISABLE;
         hcan.pTxMsg = NULL;
         HAL_CAN_Init(&hcan);
         bus_state = ON_BUS;
-	can_set_filter(0, 0);
+        can_set_filter(0, 0);
     }
 }
 
@@ -88,13 +88,13 @@ void can_set_bitrate(enum can_bitrate bitrate) {
 
     switch (bitrate) {
     case CAN_BITRATE_10K:
-	prescaler = 600;
+        prescaler = 600;
         break;
     case CAN_BITRATE_20K:
-	prescaler = 300;
+        prescaler = 300;
         break;
     case CAN_BITRATE_50K:
-	prescaler = 120;
+        prescaler = 120;
         break;
     case CAN_BITRATE_100K:
         prescaler = 60;
@@ -136,7 +136,7 @@ uint32_t can_tx(CanTxMsgTypeDef *tx_msg, uint32_t timeout) {
     hcan.pTxMsg = tx_msg;
     status = HAL_CAN_Transmit(&hcan, timeout);
 
-	led_on();
+    led_on();
     return status;
 }
 
@@ -147,7 +147,7 @@ uint32_t can_rx(CanRxMsgTypeDef *rx_msg, uint32_t timeout) {
 
     status = HAL_CAN_Receive(&hcan, CAN_FIFO0, timeout);
 
-	led_on();
+    led_on();
     return status;
 }
 
