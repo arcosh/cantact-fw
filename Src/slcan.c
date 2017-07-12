@@ -88,17 +88,17 @@ int8_t slcan_parse_str(uint8_t *buf, uint8_t len) {
             buf[i] = buf[i] - '0';
     }
 
-    if (buf[0] == 'O') {
+    if (buf[0] == SLCAN_OPEN_CHANNEL) {
         // open channel command
         can_enable();
         return 0;
 
-    } else if (buf[0] == 'C') {
+    } else if (buf[0] == SLCAN_CLOSE_CHANNEL) {
         // close channel command
         can_disable();
         return 0;
 
-    } else if (buf[0] == 'S') {
+    } else if (buf[0] == SLCAN_SET_BITRATE_CANONICAL) {
         // set bitrate command
         switch(buf[1]) {
         case 0:
@@ -134,7 +134,7 @@ int8_t slcan_parse_str(uint8_t *buf, uint8_t len) {
         }
         return 0;
 
-    } else if (buf[0] == 'm' || buf[0] == 'M') {
+    } else if (buf[0] == CANTACT_SET_MODE1 || buf[0] == CANTACT_SET_MODE2) {
         // set mode command
         if (buf[1] == 1) {
             // mode 1: silent
@@ -145,7 +145,7 @@ int8_t slcan_parse_str(uint8_t *buf, uint8_t len) {
         }
         return 0;
 
-    } else if (buf[0] == 'F') {
+    } else if (buf[0] == CANTACT_SET_FILTER) {
         // set filter command
         uint32_t id = 0;
         for (i = 1; i < len; i++) {
@@ -155,7 +155,7 @@ int8_t slcan_parse_str(uint8_t *buf, uint8_t len) {
         current_filter_id = id;
         can_set_filter(current_filter_id, current_filter_mask);
 
-    } else if (buf[0] == 'K') {
+    } else if (buf[0] == CANTACT_SET_MASK) {
         // set mask command
         uint32_t mask = 0;
         for (i = 1; i < len; i++) {
@@ -165,11 +165,11 @@ int8_t slcan_parse_str(uint8_t *buf, uint8_t len) {
         current_filter_mask = mask;
         can_set_filter(current_filter_id, current_filter_mask);
 
-    } else if (buf[0] == 't' || buf[0] == 'T') {
+    } else if (buf[0] == SLCAN_TRANSMIT_STANDARD || buf[0] == SLCAN_TRANSMIT_EXTENDED) {
         // transmit data frame command
         frame.RTR = CAN_RTR_DATA;
 
-    } else if (buf[0] == 'r' || buf[0] == 'R') {
+    } else if (buf[0] == SLCAN_TRANSMIT_REQUEST_STANDARD || buf[0] == SLCAN_TRANSMIT_REQUEST_EXTENDED) {
         // transmit remote frame command
         frame.RTR = CAN_RTR_REMOTE;
 
