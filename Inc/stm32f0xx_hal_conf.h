@@ -1,7 +1,7 @@
 /**
   ******************************************************************************
   * @file    stm32f0xx_hal_conf.h
-  * @brief   HAL configuration template file.
+  * @brief   Hardware abstraction layer (HAL) configuration file
   ******************************************************************************
   * @attention
   *
