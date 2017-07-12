@@ -134,18 +134,7 @@ int8_t slcan_parse_str(uint8_t *buf, uint8_t len) {
         }
         return 0;
 
-    } else if (buf[0] == CANTACT_SET_MODE1 || buf[0] == CANTACT_SET_MODE2) {
-        // set mode command
-        if (buf[1] == 1) {
-            // mode 1: silent
-            can_set_silent(1);
-        } else {
-            // default to normal mode
-            can_set_silent(0);
-        }
-        return 0;
-
-    } else if (buf[0] == CANTACT_SET_FILTER) {
+    } else if (buf[0] == SLCAN_SET_ACCEPTANCE_CODE) {
         // set filter command
         uint32_t id = 0;
         for (i = 1; i < len; i++) {
@@ -155,7 +144,7 @@ int8_t slcan_parse_str(uint8_t *buf, uint8_t len) {
         current_filter_id = id;
         can_set_filter(current_filter_id, current_filter_mask);
 
-    } else if (buf[0] == CANTACT_SET_MASK) {
+    } else if (buf[0] == SLCAN_SET_ACCEPTANCE_MASK) {
         // set mask command
         uint32_t mask = 0;
         for (i = 1; i < len; i++) {
