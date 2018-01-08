@@ -46,7 +46,7 @@ void can_set_filter(uint32_t id, uint32_t mask) {
     // add the top 5 bits of the extended ID
     filter.FilterMaskIdHigh += (mask >> 24) & 0xFFFF;
     // set the low part to the remaining extended ID bits
-    filter.FilterMaskIdLow += ((mask & 0x1FFFF800) << 3);
+    filter.FilterMaskIdLow = ((mask & 0x1FFFF800) << 3);
 
     filter.FilterMode = CAN_FILTERMODE_IDMASK;
     filter.FilterScale = CAN_FILTERSCALE_32BIT;
