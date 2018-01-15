@@ -24,8 +24,8 @@ static enum can_bus_state bus_state;
 
 
 void can_init(void) {
-    // default to 125 kbit/s
-    prescaler = 48;
+    // Default speed: 1 Mbps
+    prescaler = CAN_PRESCALER_1000K;
     hcan.Instance = CAN;
     bus_state = OFF_BUS;
 }
@@ -64,9 +64,9 @@ void can_enable(void) {
     if (bus_state == OFF_BUS) {
         hcan.Init.Prescaler = prescaler;
         hcan.Init.Mode = CAN_MODE_NORMAL;
-        hcan.Init.SJW = CAN_SJW_1TQ;
-        hcan.Init.BS1 = CAN_BS1_4TQ;
-        hcan.Init.BS2 = CAN_BS2_3TQ;
+        hcan.Init.SJW = CAN_SJW;
+        hcan.Init.BS1 = CAN_BS1;
+        hcan.Init.BS2 = CAN_BS2;
         hcan.Init.TTCM = DISABLE;
         hcan.Init.ABOM = DISABLE;
         hcan.Init.AWUM = DISABLE;
@@ -97,31 +97,32 @@ void can_set_bitrate(enum can_bitrate bitrate) {
 
     switch (bitrate) {
     case CAN_BITRATE_10K:
-        prescaler = 600;
+        prescaler = CAN_PRESCALER_10K;
         break;
     case CAN_BITRATE_20K:
-        prescaler = 300;
+        prescaler = CAN_PRESCALER_20K;
         break;
     case CAN_BITRATE_50K:
-        prescaler = 120;
+        prescaler = CAN_PRESCALER_50K;
         break;
     case CAN_BITRATE_100K:
-        prescaler = 60;
+        prescaler = CAN_PRESCALER_100K;
         break;
     case CAN_BITRATE_125K:
-        prescaler = 48;
+        prescaler = CAN_PRESCALER_125K;
         break;
     case CAN_BITRATE_250K:
-        prescaler = 24;
+        prescaler = CAN_PRESCALER_250K;
         break;
     case CAN_BITRATE_500K:
-        prescaler = 12;
+        prescaler = CAN_PRESCALER_500K;
         break;
     case CAN_BITRATE_750K:
-        prescaler = 8;
+        prescaler = CAN_PRESCALER_750K;
         break;
-    case CAN_BITRATE_1000K:
-        prescaler = 6;
+    default:
+//    case CAN_BITRATE_1000K:
+        prescaler = CAN_PRESCALER_1000K;
         break;
     }
 }
