@@ -12,4 +12,10 @@
 #define LED_RED_PORT    GPIOB
 #define LED_RED_PIN     GPIO_PIN_1
 
+#define CAN_PERIPHERAL  CAN
+#define CAN_RX_PORT     GPIOB
+#define CAN_RX_PIN      GPIO_PIN_8
+#define CAN_TX_PORT     GPIOB
+#define CAN_TX_PIN      GPIO_PIN_9
+
 #endif

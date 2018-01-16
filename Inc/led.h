@@ -13,24 +13,24 @@ typedef enum
 {
     LED_POWER,
     LED_ACTIVITY,
-    LED_ERROR = -1,
+    LED_ERROR,
 } led_index_t;
 
 #define LED_POWER_PORT      LED_GREEN_PORT
 #define LED_POWER_PIN       LED_GREEN_PIN
-#define LED_ACTIVITY_PORT   LED_RED_PORT
-#define LED_ACTIVITY_PIN    LED_RED_PIN
+#define LED_ACTIVITY_PORT   LED_GREEN_PORT
+#define LED_ACTIVITY_PIN    LED_GREEN_PIN
 #define LED_ERROR_PORT      LED_RED_PORT
 #define LED_ERROR_PIN       LED_RED_PIN
 
 #define LED_POWER_ENABLED
 #define LED_ACTIVITY_ENABLED
-//#define LED_ERROR_ENABLED
+#define LED_ERROR_ENABLED
 
 /**
  * Number of @ref led_process iterations the LED should stay on
  */
-#define LED_ON_DURATION        50
+#define LED_ON_DURATION        10
 
 
 /**

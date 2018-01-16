@@ -34,6 +34,8 @@
   */
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f0xx_hal.h"
+#include "platform.h"
+#include "config.h"
 
 /* USER CODE BEGIN 0 */
 
@@ -50,7 +52,7 @@ void HAL_MspInit(void)
 
   /* System interrupt init*/
 /* SysTick_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(SysTick_IRQn, 0, 0);
+  HAL_NVIC_SetPriority(SysTick_IRQn, IRQ_PRIORITY_SYSTICK, 0);
 
   /* USER CODE BEGIN MspInit 1 */
 
@@ -61,7 +63,7 @@ void HAL_CAN_MspInit(CAN_HandleTypeDef* hcan)
 {
 
   GPIO_InitTypeDef GPIO_InitStruct;
-  if(hcan->Instance==CAN)
+  if(hcan->Instance == CAN_PERIPHERAL)
   {
   /* USER CODE BEGIN CAN_MspInit 0 */
 
@@ -73,12 +75,19 @@ void HAL_CAN_MspInit(CAN_HandleTypeDef* hcan)
     PB8     ------> CAN_RX
     PB9     ------> CAN_TX
     */
-    GPIO_InitStruct.Pin = GPIO_PIN_8|GPIO_PIN_9;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-    GPIO_InitStruct.Speed = GPIO_SPEED_LOW;
+    GPIO_InitStruct.Pull = GPIO_PULLUP;
+    GPIO_InitStruct.Speed = GPIO_SPEED_HIGH;
     GPIO_InitStruct.Alternate = GPIO_AF4_CAN;
-    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+    GPIO_InitStruct.Pin = CAN_RX_PIN;
+    HAL_GPIO_Init(CAN_RX_PORT, &GPIO_InitStruct);
+
+    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+    GPIO_InitStruct.Pull = GPIO_PULLUP;
+    GPIO_InitStruct.Speed = GPIO_SPEED_HIGH;
+    GPIO_InitStruct.Alternate = GPIO_AF4_CAN;
+    GPIO_InitStruct.Pin = CAN_TX_PIN;
+    HAL_GPIO_Init(CAN_TX_PORT, &GPIO_InitStruct);
 
   /* USER CODE BEGIN CAN_MspInit 1 */
 
@@ -90,7 +99,7 @@ void HAL_CAN_MspInit(CAN_HandleTypeDef* hcan)
 void HAL_CAN_MspDeInit(CAN_HandleTypeDef* hcan)
 {
 
-  if(hcan->Instance==CAN)
+  if(hcan->Instance == CAN_PERIPHERAL)
   {
   /* USER CODE BEGIN CAN_MspDeInit 0 */
 
@@ -102,7 +111,8 @@ void HAL_CAN_MspDeInit(CAN_HandleTypeDef* hcan)
     PB8     ------> CAN_RX
     PB9     ------> CAN_TX
     */
-    HAL_GPIO_DeInit(GPIOB, GPIO_PIN_8|GPIO_PIN_9);
+    HAL_GPIO_DeInit(CAN_RX_PORT, CAN_RX_PIN);
+    HAL_GPIO_DeInit(CAN_TX_PORT, CAN_TX_PIN);
 
   /* USER CODE BEGIN CAN_MspDeInit 1 */
 

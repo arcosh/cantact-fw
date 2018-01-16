@@ -6,11 +6,13 @@
 #include "stm32f0xx_hal.h"
 #include "can.h"
 #include "slcan.h"
+#include <error.h>
 
 static uint32_t current_filter_id = 0;
 static uint32_t current_filter_mask = 0;
 
-int8_t slcan_parse_frame(uint8_t *buf, CanRxMsgTypeDef *frame) {
+
+int8_t slcan_parse_frame(CanRxMsgTypeDef* frame, uint8_t* buf) {
     uint8_t i = 0;
     uint8_t id_len, j;
     uint32_t tmp;
@@ -71,7 +73,8 @@ int8_t slcan_parse_frame(uint8_t *buf, CanRxMsgTypeDef *frame) {
     return i;
 }
 
-int8_t slcan_parse_str(uint8_t *buf, uint8_t len) {
+
+int8_t slcan_parse_str(uint8_t* buf, uint8_t len) {
     CanTxMsgTypeDef frame;
     uint8_t i;
 
@@ -91,6 +94,8 @@ int8_t slcan_parse_str(uint8_t *buf, uint8_t len) {
     if (buf[0] == SLCAN_OPEN_CHANNEL) {
         // open channel command
         can_enable();
+        current_filter_id = 0;
+        current_filter_mask = 0;
         return 0;
 
     } else if (buf[0] == SLCAN_CLOSE_CHANNEL) {
@@ -125,30 +130,41 @@ int8_t slcan_parse_str(uint8_t *buf, uint8_t len) {
         case 7:
             can_set_bitrate(CAN_BITRATE_750K);
             break;
-        case 8:
-            can_set_bitrate(CAN_BITRATE_1000K);
-            break;
         default:
+//        case 8:
+            can_set_bitrate(CAN_BITRATE_1000K);
+//            break;
+//        default:
             // invalid setting
-            return -1;
+//            return -1;
         }
         return 0;
 
     } else if (buf[0] == SLCAN_SET_ACCEPTANCE_CODE) {
+
+        // must have one exactly 8 bytes long argument
+        if (len != 9)
+            return ERROR_SLCAN_INVALID_ARGUMENT;
+
         // set filter command
         uint32_t id = 0;
-        for (i = 1; i < len; i++) {
-            id *= 16;
+        for (i = 1; i <= 8; i++) {
+            id = id << 4;
             id += buf[i];
         }
         current_filter_id = id;
         can_set_filter(current_filter_id, current_filter_mask);
 
     } else if (buf[0] == SLCAN_SET_ACCEPTANCE_MASK) {
+
+        // must have one exactly 8 bytes long argument
+        if (len != 9)
+            return ERROR_SLCAN_INVALID_ARGUMENT;
+
         // set mask command
         uint32_t mask = 0;
-        for (i = 1; i < len; i++) {
-            mask *= 16;
+        for (i = 1; i <= 8; i++) {
+            mask = mask << 4;
             mask += buf[i];
         }
         current_filter_mask = mask;
@@ -163,8 +179,7 @@ int8_t slcan_parse_str(uint8_t *buf, uint8_t len) {
         frame.RTR = CAN_RTR_REMOTE;
 
     } else {
-        // error, unknown command
-        return -1;
+        return ERROR_SLCAN_COMMAND_NOT_RECOGNIZED;
     }
 
     if (buf[0] == 't' || buf[0] == 'r') {
@@ -173,7 +188,7 @@ int8_t slcan_parse_str(uint8_t *buf, uint8_t len) {
         frame.IDE = CAN_ID_EXT;
     } else {
         // error
-        return -1;
+        return ERROR_SLCAN_COMMAND_NOT_RECOGNIZED;
     }
 
     frame.StdId = 0;
@@ -208,7 +223,7 @@ int8_t slcan_parse_str(uint8_t *buf, uint8_t len) {
     }
 
     // send the message
-    can_tx(&frame, 10);
+    can_send(&frame);
 
     return 0;
 }

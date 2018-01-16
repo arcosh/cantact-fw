@@ -10,7 +10,8 @@
 //#define INTERNAL_OSCILLATOR
 #define EXTERNAL_OSCILLATOR
 
-#define IRQ_PRIORITY_USB    1
-#define IRQ_PRIORITY_CAN    2
+#define IRQ_PRIORITY_SYSTICK    3
+#define IRQ_PRIORITY_USB        2
+#define IRQ_PRIORITY_CAN        1
 
 #endif

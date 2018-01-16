@@ -33,7 +33,7 @@ USB_INCLUDES = -IMiddlewares/ST/STM32_USB_Device_Library/Core/Inc
 USB_INCLUDES += -IMiddlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc
 
 # USER_CFLAGS: user C flags (enable warnings, enable debug info)
-USER_CFLAGS = -Wall -g -ffunction-sections -fdata-sections -Os
+USER_CFLAGS = -Wall -g -ffunction-sections -fdata-sections -O3
 # USER_LDFLAGS:  user LD flags
 USER_LDFLAGS = -fno-exceptions -ffunction-sections -fdata-sections -Wl,--gc-sections
 
@@ -56,11 +56,10 @@ MKDIR = mkdir -p
 DOXYGEN = doxygen
 #######################################
 
-# core and CPU type for Cortex M0
+# Core and CPU type for Cortex M0
 # ARM core type (CORE_M0, CORE_M3)
 CORE = CORE_M0
-# ARM CPU type (cortex-m0, cortex-m3)
-CPU = cortex-m0
+CFLAGS += -mcpu=cortex-m0 -mthumb -mfloat-abi=soft
 
 # where to build STM32Cube
 CUBELIB_BUILD_DIR = $(BUILD_DIR)/STM32Cube
@@ -81,10 +80,9 @@ INCLUDES += $(USER_INCLUDES)
 # macros for gcc
 DEFS = -D$(CORE) $(USER_DEFS) -D$(TARGET_DEVICE)
 
-# compile gcc flags
-CFLAGS = $(DEFS) $(INCLUDES)
+# GCC compiler flags
+CFLAGS += $(DEFS) $(INCLUDES)
 CFLAGS += -std=gnu99
-CFLAGS += -mcpu=$(CPU) -mthumb
 CFLAGS += $(USER_CFLAGS)
 
 # default action: build the user application
@@ -177,11 +175,15 @@ $(BUILD_DIR):
 	$(MKDIR) $@
 
 # delete all user application files, keep the libraries
-clean:
-		-rm $(BUILD_DIR)/*.o
-		-rm $(BUILD_DIR)/*.elf
-		-rm $(BUILD_DIR)/*.hex
-		-rm $(BUILD_DIR)/*.map
-		-rm $(BUILD_DIR)/*.bin
+semiclean:
+		rm $(BUILD_DIR)/*.o
+		rm $(BUILD_DIR)/*.elf
+		rm $(BUILD_DIR)/*.hex
+		rm $(BUILD_DIR)/*.map
+		rm $(BUILD_DIR)/*.bin
 
-.PHONY: clean all cubelib
+clean: semiclean
+		rm $(USB_BUILD_DIR)/*.o
+		rm $(CUBELIB_BUILD_DIR)/*.o
+
+.PHONY: clean semiclean all

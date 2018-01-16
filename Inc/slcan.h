@@ -87,7 +87,7 @@ enum slcan_message_type {
  * @param  frame: Pointer to CAN frame received from CAN interface
  * @return Number of bytes in generated SLCAN message
  */
-int8_t slcan_parse_frame(uint8_t *buf, CanRxMsgTypeDef *frame);
+int8_t slcan_parse_frame(CanRxMsgTypeDef* frame, uint8_t* buf);
 
 
 /**
