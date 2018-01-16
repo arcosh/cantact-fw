@@ -11,7 +11,7 @@
 BUILD_NUMBER ?= 0
 
 # SOURCES: list of sources in the user application
-SOURCES = main.c usbd_conf.c usbd_cdc_if.c usb_device.c usbd_desc.c stm32f0xx_hal_msp.c stm32f0xx_it.c system_stm32f0xx.c can.c slcan.c led.c
+SOURCES = $(wildcard Src/*.c)
 
 # TARGET: name of the user application
 TARGET = CANtact-b$(BUILD_NUMBER)
@@ -83,6 +83,7 @@ DEFS = -D$(CORE) $(USER_DEFS) -D$(TARGET_DEVICE)
 
 # compile gcc flags
 CFLAGS = $(DEFS) $(INCLUDES)
+CFLAGS += -std=gnu99
 CFLAGS += -mcpu=$(CPU) -mthumb
 CFLAGS += $(USER_CFLAGS)
 
@@ -90,7 +91,7 @@ CFLAGS += $(USER_CFLAGS)
 all: $(BUILD_DIR)/$(TARGET).bin $(BUILD_DIR)/$(TARGET).hex
 
 flash: all
-	sudo dfu-util -d 0483:df11 -c 1 -i 0 -a 0 -s 0x08000000 -D $(BUILD_DIR)/$(TARGET).bin
+	dfu-util -d 0483:df11 -c 1 -i 0 -a 0 -s 0x08000000 -D $(BUILD_DIR)/$(TARGET).bin
 
 .PHONY: doc
 doc:
