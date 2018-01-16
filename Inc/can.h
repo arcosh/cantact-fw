@@ -7,6 +7,7 @@
 #define _CAN_H
 
 #include "stm32f0xx_hal.h"
+#include "can_timing.h"
 
 /**
  * List of supported bitrates on the CAN bus
@@ -21,30 +22,6 @@ enum can_bitrate {
     CAN_BITRATE_500K,
     CAN_BITRATE_750K,
     CAN_BITRATE_1000K,
-};
-
-/*
- * Time quanta configuration
- */
-#define CAN_SJW     CAN_SJW_1TQ
-#define CAN_BS1     CAN_BS1_4TQ
-#define CAN_BS2     CAN_BS2_3TQ
-
-/**
- * List of prescalers for the CAN peripheral clock
- * in order to achieve the corresponding bitrates
- * with the above time quanta
- */
-enum can_prescaler {
-    CAN_PRESCALER_10K = 600,
-    CAN_PRESCALER_20K = 300,
-    CAN_PRESCALER_50K = 120,
-    CAN_PRESCALER_100K = 60,
-    CAN_PRESCALER_125K = 48,
-    CAN_PRESCALER_250K = 24,
-    CAN_PRESCALER_500K = 12,
-    CAN_PRESCALER_750K = 8,
-    CAN_PRESCALER_1000K = 6,
 };
 
 /**
