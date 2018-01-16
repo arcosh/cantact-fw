@@ -37,6 +37,8 @@
 #include "stm32f0xx_hal.h"
 #include "usbd_def.h"
 #include "usbd_core.h"
+
+#include "config.h"
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
@@ -69,7 +71,7 @@ void HAL_PCD_MspInit(PCD_HandleTypeDef* hpcd)
   /* USER CODE END USB_MspInit 0 */
     /* Peripheral clock enable */
     __USB_CLK_ENABLE();
-    HAL_NVIC_SetPriority(USB_IRQn, 0, 0);
+    HAL_NVIC_SetPriority(USB_IRQn, IRQ_PRIORITY_USB, 0);
     HAL_NVIC_EnableIRQ(USB_IRQn);
   /* USER CODE BEGIN USB_MspInit 1 */
 

@@ -278,7 +278,7 @@ static int8_t CDC_Receive_FS (uint8_t* Buf, uint32_t *Len)
  *
  * @param  Buf: Buffer of data to be send
  * @param  Len: Number of data to be send (in bytes)
- * @retval Result of the opeartion: USBD_OK if all operations are OK else USBD_FAIL or USBD_BUSY
+ * @retval Result of the operation: USBD_OK if all operations are OK else USBD_FAIL or USBD_BUSY
  */
 uint8_t CDC_Transmit_FS(uint8_t* Buf, uint16_t Len)
 {
