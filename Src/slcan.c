@@ -5,6 +5,7 @@
 
 #include "stm32f0xx_hal.h"
 #include "can.h"
+#include "fifo.h"
 #include "slcan.h"
 #include <error.h>
 
@@ -42,7 +43,7 @@ int8_t slcan_parse_frame(CanRxMsgTypeDef* frame, uint8_t* buf) {
 
     // add identifier to buffer
     for(j=id_len; j > 0; j--) {
-        // add nybble to buffer
+        // add nibble to buffer
         buf[j] = (tmp & 0xF);
         tmp = tmp >> 4;
         i++;
@@ -66,42 +67,48 @@ int8_t slcan_parse_frame(CanRxMsgTypeDef* frame, uint8_t* buf) {
         }
     }
 
-    // add carrage return (slcan EOL)
-    buf[i++] = '\r';
+    // add carriage return (slcan EOL)
+    buf[i++] = SLCAN_COMMAND_TERMINATOR;
 
     // return number of bytes in string
     return i;
 }
 
 
-int8_t slcan_parse_str(uint8_t* buf, uint8_t len) {
-    CanTxMsgTypeDef frame;
-    uint8_t i;
+int8_t slcan_parse_command(uint8_t* buf, uint8_t len) {
 
-    // convert from ASCII (2nd character to end)
-    for (i = 1; i < len; i++) {
-        // lowercase letters
-        if(buf[i] >= 'a')
+    /*
+     * Partially convert string input to binary
+     * beginning with 2nd character till end of string
+     * in order to simplify the hexadecimal to byte conversion below
+     */
+    for (uint8_t i=1; i < len; i++) {
+        if (buf[i] >= 'a' && buf[i] <= 'f') {
+            // Lowercase letters
             buf[i] = buf[i] - 'a' + 10;
-        // uppercase letters
-        else if(buf[i] >= 'A')
+        }
+        else if (buf[i] >= 'A' && buf[i] <= 'F') {
+            // Uppercase letters
             buf[i] = buf[i] - 'A' + 10;
-        // numbers
-        else
+        }
+        else if (buf[i] >= '0' && buf[i] <= '9') {
+            // Digits
             buf[i] = buf[i] - '0';
+        }
     }
 
+    /*
+     * Evaluate first byte in order to determine command type
+     */
     if (buf[0] == SLCAN_OPEN_CHANNEL) {
-        // open channel command
-        can_enable();
         current_filter_id = 0;
         current_filter_mask = 0;
-        return 0;
+        can_enable();
+        return SUCCESS;
 
     } else if (buf[0] == SLCAN_CLOSE_CHANNEL) {
-        // close channel command
         can_disable();
-        return 0;
+        return SUCCESS;
 
     } else if (buf[0] == SLCAN_SET_BITRATE_CANONICAL) {
         // set bitrate command
@@ -130,15 +137,13 @@ int8_t slcan_parse_str(uint8_t* buf, uint8_t len) {
         case 7:
             can_set_bitrate(CAN_BITRATE_750K);
             break;
-        default:
-//        case 8:
+        case 8:
             can_set_bitrate(CAN_BITRATE_1000K);
-//            break;
-//        default:
-            // invalid setting
-//            return -1;
+            break;
+        default:
+            return ERROR_SLCAN_INVALID_BITRATE;
         }
-        return 0;
+        return SUCCESS;
 
     } else if (buf[0] == SLCAN_SET_ACCEPTANCE_CODE) {
 
@@ -148,12 +153,13 @@ int8_t slcan_parse_str(uint8_t* buf, uint8_t len) {
 
         // set filter command
         uint32_t id = 0;
-        for (i = 1; i <= 8; i++) {
-            id = id << 4;
+        for (uint8_t i=1; i <= 8; i++) {
+            id <<= 4;
             id += buf[i];
         }
         current_filter_id = id;
         can_set_filter(current_filter_id, current_filter_mask);
+        return SUCCESS;
 
     } else if (buf[0] == SLCAN_SET_ACCEPTANCE_MASK) {
 
@@ -163,67 +169,80 @@ int8_t slcan_parse_str(uint8_t* buf, uint8_t len) {
 
         // set mask command
         uint32_t mask = 0;
-        for (i = 1; i <= 8; i++) {
-            mask = mask << 4;
+        for (uint8_t i=1; i <= 8; i++) {
+            mask <<= 4;
             mask += buf[i];
         }
         current_filter_mask = mask;
         can_set_filter(current_filter_id, current_filter_mask);
+        return SUCCESS;
 
-    } else if (buf[0] == SLCAN_TRANSMIT_STANDARD || buf[0] == SLCAN_TRANSMIT_EXTENDED) {
-        // transmit data frame command
-        frame.RTR = CAN_RTR_DATA;
-
-    } else if (buf[0] == SLCAN_TRANSMIT_REQUEST_STANDARD || buf[0] == SLCAN_TRANSMIT_REQUEST_EXTENDED) {
-        // transmit remote frame command
-        frame.RTR = CAN_RTR_REMOTE;
-
-    } else {
-        return ERROR_SLCAN_COMMAND_NOT_RECOGNIZED;
-    }
-
-    if (buf[0] == 't' || buf[0] == 'r') {
-        frame.IDE = CAN_ID_STD;
-    } else if (buf[0] == 'T' || buf[0] == 'R') {
-        frame.IDE = CAN_ID_EXT;
-    } else {
+    } else if ((buf[0] == SLCAN_TRANSMIT_STANDARD)
+            || (buf[0] == SLCAN_TRANSMIT_EXTENDED)
+            || (buf[0] == SLCAN_TRANSMIT_REQUEST_STANDARD)
+            || (buf[0] == SLCAN_TRANSMIT_REQUEST_EXTENDED)) {
+        extern fifo_t can_tx_fifo;
+        if (fifo_push(&can_tx_fifo, buf, len))
+            // ok
+            return SUCCESS;
         // error
-        return ERROR_SLCAN_COMMAND_NOT_RECOGNIZED;
+        return ERROR_TX_FIFO_OVERRUN;
     }
 
-    frame.StdId = 0;
-    frame.ExtId = 0;
-    if (frame.IDE == CAN_ID_EXT) {
-        uint8_t id_len = SLCAN_EXT_ID_LEN;
-        i = 1;
-        while (i <= id_len) {
-            frame.ExtId *= 16;
-            frame.ExtId += buf[i++];
+    return ERROR_SLCAN_COMMAND_NOT_RECOGNIZED;
+}
+
+
+bool slcan_parse_transmit_command(uint8_t* buffer, uint16_t length, CanTxMsgTypeDef* frame) {
+
+    if (length == 0)
+        // Empty buffer
+        return false;
+
+    if ((buffer[0] != SLCAN_TRANSMIT_STANDARD)
+     && (buffer[0] != SLCAN_TRANSMIT_EXTENDED)
+     && (buffer[0] != SLCAN_TRANSMIT_REQUEST_STANDARD)
+     && (buffer[0] != SLCAN_TRANSMIT_REQUEST_EXTENDED))
+        // Invalid transmit command
+        return false;
+
+    // Parser position in the buffer
+    uint8_t i = 0;
+
+    frame->IDE = ((buffer[i] == SLCAN_TRANSMIT_STANDARD) || (buffer[i] == SLCAN_TRANSMIT_REQUEST_STANDARD))
+                    ? CAN_ID_STD
+                    : CAN_ID_EXT;
+
+    frame->RTR = ((buffer[i] == SLCAN_TRANSMIT_REQUEST_STANDARD) || (buffer[i] == SLCAN_TRANSMIT_REQUEST_EXTENDED))
+                    ? CAN_RTR_REMOTE
+                    : CAN_RTR_DATA;
+
+    frame->StdId = 0;
+    frame->ExtId = 0;
+    if (frame->IDE == CAN_ID_STD) {
+        // Parse hexadecimal representation of standard CAN ID
+        for (uint8_t j=i; j <= SLCAN_STD_ID_LEN; j++, i++) {
+            frame->StdId <<= 4;
+            frame->StdId += buffer[j];
+        }
+    } else {
+        // Parse hexadecimal representation of extended CAN ID
+        for (uint8_t j=i; j <= SLCAN_EXT_ID_LEN; j++, i++) {
+            frame->ExtId <<= 4;
+            frame->ExtId += buffer[j];
         }
     }
-    else {
-        uint8_t id_len = SLCAN_STD_ID_LEN;
-        i = 1;
-        while (i <= id_len) {
-            frame.StdId *= 16;
-            frame.StdId += buf[i++];
-        }
+
+    frame->DLC = buffer[i++];
+    if (frame->DLC < 0 || frame->DLC > 8) {
+        return false;
     }
 
-
-    frame.DLC = buf[i++];
-    if (frame.DLC < 0 || frame.DLC > 8) {
-        return -1;
+    // Parse data from hexadecimal representation
+    for (uint8_t j=0; j < frame->DLC; j++, i+=2) {
+        frame->Data[j] = (buffer[i] << 4);
+        frame->Data[j] += buffer[i+1];
     }
 
-    uint8_t j;
-    for (j = 0; j < frame.DLC; j++) {
-        frame.Data[j] = (buf[i] << 4) + buf[i+1];
-        i += 2;
-    }
-
-    // send the message
-    can_send(&frame);
-
-    return 0;
+    return true;
 }

@@ -18,4 +18,7 @@
 #define CAN_TX_PORT     GPIOB
 #define CAN_TX_PIN      GPIO_PIN_9
 
+#define enter_critical()    do { asm("CPSID  i"); __DSB(); __ISB(); } while (0);
+#define exit_critical()     asm("CPSIE  i");
+
 #endif

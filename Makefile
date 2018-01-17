@@ -176,14 +176,14 @@ $(BUILD_DIR):
 
 # delete all user application files, keep the libraries
 semiclean:
-		rm $(BUILD_DIR)/*.o
-		rm $(BUILD_DIR)/*.elf
-		rm $(BUILD_DIR)/*.hex
-		rm $(BUILD_DIR)/*.map
-		rm $(BUILD_DIR)/*.bin
+		rm -f $(BUILD_DIR)/*.o
+		rm -f $(BUILD_DIR)/*.elf
+		rm -f $(BUILD_DIR)/*.hex
+		rm -f $(BUILD_DIR)/*.map
+		rm -f $(BUILD_DIR)/*.bin
 
 clean: semiclean
-		rm $(USB_BUILD_DIR)/*.o
-		rm $(CUBELIB_BUILD_DIR)/*.o
+		rm -f $(USB_BUILD_DIR)/*.o
+		rm -f $(CUBELIB_BUILD_DIR)/*.o
 
 .PHONY: clean semiclean all

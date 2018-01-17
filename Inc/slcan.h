@@ -6,6 +6,11 @@
 #ifndef _SLCAN_H
 #define _SLCAN_H
 
+#include <stdint.h>
+#include <stdbool.h>
+#include "stm32f0xx_hal.h"
+
+
 /**
  * The maximum transfer unit (MTU),
  * i.e. the maximum number of bytes possible in one SLCAN message,
@@ -22,6 +27,7 @@
 /** Length of the extended CAN ID */
 #define SLCAN_EXT_ID_LEN 8
 
+#define SLCAN_COMMAND_TERMINATOR    '\r'
 
 /**
  * Serial CAN message types
@@ -94,8 +100,21 @@ int8_t slcan_parse_frame(CanRxMsgTypeDef* frame, uint8_t* buf);
  * @brief  Parses SLCAN message and configures CAN peripheral accordingly or transmits CAN frame
  * @param  buf: Pointer to SLCAN message
  * @param  len: Number of bytes in SLCAN message
- * @return Zero if successful, other values indicate an error
+ * @return Zero if successful, other values indicate an error, see \ref error.h
  */
-int8_t slcan_parse_str(uint8_t *buf, uint8_t len);
+int8_t slcan_parse_command(uint8_t *buf, uint8_t len);
+
+
+/**
+ * Generates a CAN frame according to an SLCAN transmit command
+ *
+ * @param buffer    Pointer to SLCAN string
+ * @param length    Length of SLCAN string
+ * @param frame     Pointer to CAN frame structure to configure according to SLCAN string
+ * @return true     Parser success
+ * @return false    Failed to configure frame according to SLCAN string
+ */
+bool slcan_parse_transmit_command(uint8_t* buffer, uint16_t length, CanTxMsgTypeDef* frame);
+
 
 #endif // _SLCAN_H

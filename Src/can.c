@@ -31,18 +31,15 @@ enum can_bus_state bus_state;
 CanRxMsgTypeDef can_rx_frame;
 
 /**
- * Transmission buffer for one frame
- */
-CanTxMsgTypeDef can_tx_frame;
-
-/**
  * Buffer for incoming CAN frames
  */
+uint8_t can_rx_buffer[CAN_RX_BUFFER_SIZE];
 fifo_t can_rx_fifo;
 
 /**
  * Buffer for outgoing CAN frames
  */
+uint8_t can_tx_buffer[CAN_TX_BUFFER_SIZE];
 fifo_t can_tx_fifo;
 
 
@@ -66,36 +63,14 @@ void can_init(void) {
 
 void HAL_CAN_RxCpltCallback(CAN_HandleTypeDef* hcan)
 {
-    // Append received frame to buffer
-//    fifo_push(
-//        &can_rx_fifo,
-//        hcan->pRxMsg->StdId,
-//        hcan->pRxMsg->ExtId,
-//        hcan->pRxMsg->IDE,
-//        hcan->pRxMsg->RTR,
-//        hcan->pRxMsg->DLC,
-//        hcan->pRxMsg->Data
-//        );
-
     // Convert frame to SLCAN string
-    uint8_t msg_buf[SLCAN_MTU];
-    uint32_t status = slcan_parse_frame(&can_rx_frame, (uint8_t*)&msg_buf);
+    uint8_t buffer[SLCAN_MTU];
+    uint16_t length = slcan_parse_frame(hcan->pRxMsg, buffer);
 
-    // Transmit SLCAN string to PC via USB
-    uint8_t result;
-    uint8_t timeout = 8;
-    do
-    {
-        result = CDC_Transmit_FS(msg_buf, status);
-    }
-    while (result != USBD_OK && timeout--);
-    if (result == USBD_OK) {
-        led_on(LED_ACTIVITY);
-    } else {
-        led_on(LED_ERROR);
-    }
+    // Append SLCAN string to buffer
+    fifo_push(&can_rx_fifo, buffer, length);
 
-//    __HAL_CAN_ENABLE_IT(hcan, CAN_IT_FMP0);
+    // Receive more frames
     HAL_CAN_Receive_IT(hcan, CAN_FIFO0);
 }
 
@@ -153,8 +128,8 @@ void can_enable(void) {
     }
 
     // Clear FIFO buffers
-    fifo_init(&can_rx_fifo);
-    fifo_init(&can_tx_fifo);
+    fifo_init(&can_rx_fifo, can_rx_buffer, CAN_RX_BUFFER_SIZE);
+    fifo_init(&can_tx_fifo, can_tx_buffer, CAN_TX_BUFFER_SIZE);
 
     hcan.pRxMsg = &can_rx_frame;
     hcan.pTxMsg = 0;
@@ -185,10 +160,8 @@ void can_enable(void) {
     can_set_filter(0, 0);
 
     // Enable interrupts
-//    can_enable_interrupt_switches();
-    __HAL_CAN_ENABLE_IT(&hcan, CAN_IT_BOF);
     HAL_NVIC_SetPriority(CEC_CAN_IRQn, IRQ_PRIORITY_CAN, 0);
-//    HAL_NVIC_EnableIRQ(CEC_CAN_IRQn);
+    HAL_NVIC_EnableIRQ(CEC_CAN_IRQn);
 
     HAL_CAN_Receive_IT(&hcan, CAN_FIFO0);
 }
@@ -276,19 +249,6 @@ void can_set_filter(uint32_t id, uint32_t mask) {
 }
 
 
-void can_send(CanTxMsgTypeDef* frame) {
-    fifo_push(
-        &can_tx_fifo,
-        frame->StdId,
-        frame->ExtId,
-        frame->IDE,
-        frame->RTR,
-        frame->DLC,
-        frame->Data
-        );
-}
-
-
 void can_set_silent(uint8_t silent) {
     if (bus_state == ON_BUS) {
         // cannot set silent mode while on bus
@@ -303,80 +263,83 @@ void can_set_silent(uint8_t silent) {
 
 
 void can_process_rx() {
-    hcan.pRxMsg = &can_rx_frame;
-    if (HAL_CAN_Receive(&hcan, CAN_FIFO0, 50) == HAL_OK)
-    {
-        // Convert frame to SLCAN string
-        uint8_t msg_buf[SLCAN_MTU];
-        uint32_t status = slcan_parse_frame(hcan.pRxMsg, (uint8_t*)&msg_buf);
+
+    uint8_t buffer[SLCAN_MTU];
+    uint16_t length;
+
+    enter_critical();
+    if (fifo_has_slcan_command(&can_rx_fifo, &length)) {
+
+        // Retrieve oldest SLCAN-encoded frame from reception buffer
+        if (fifo_pop(&can_rx_fifo, buffer, length))
+        {
+            exit_critical();
+        }
+        else
+        {
+            exit_critical();
+            return;
+        }
 
         // Transmit SLCAN string to PC via USB
-        uint8_t result = CDC_Transmit_FS(msg_buf, status);
+        uint8_t result = CDC_Transmit_FS(buffer, length);
         if (result == USBD_OK) {
             led_on(LED_ACTIVITY);
         } else {
             led_on(LED_ERROR);
         }
     }
-
-//    if (!fifo_is_empty(&can_rx_fifo)) {
-//        // Retrieve oldest frame from reception buffer
-//        CanRxMsgTypeDef rx_msg;
-//        fifo_get_oldest_entry(
-//                &can_rx_fifo,
-//                &rx_msg.StdId,
-//                &rx_msg.ExtId,
-//                &rx_msg.IDE,
-//                &rx_msg.RTR,
-//                &rx_msg.DLC,
-//                rx_msg.Data
-//                );
-//
-//        // Convert frame to SLCAN string
-//        uint8_t msg_buf[SLCAN_MTU];
-//        uint32_t status = slcan_parse_frame(&rx_msg, (uint8_t*)&msg_buf);
-//
-//        // Transmit SLCAN string to PC via USB
-//        uint8_t result = CDC_Transmit_FS(msg_buf, status);
-//        if (result == USBD_OK) {
-//            fifo_drop_oldest_entry(&can_rx_fifo);
-//            led_on(LED_ACTIVITY);
-//        } else {
-//            led_on(LED_ERROR);
-//        }
-//    }
+    else
+    {
+        exit_critical();
+    }
 }
 
 
-inline bool can_transmitter_is_ready()
-{
+inline bool can_transmitter_is_ready() {
     // TODO: Implement using reference manual and registers...
     return (bus_state == ON_BUS) && ((hcan.Instance->TSR & CAN_TSR_TME) > 0);
 }
 
 
 void can_process_tx() {
-    if (!fifo_is_empty(&can_tx_fifo)) {
 
-        // Retrieve the oldest frame from the transmission buffer
-        fifo_get_oldest_entry(
-                &can_tx_fifo,
-                &can_tx_frame.StdId,
-                &can_tx_frame.ExtId,
-                &can_tx_frame.IDE,
-                &can_tx_frame.RTR,
-                &can_tx_frame.DLC,
-                can_tx_frame.Data
-                );
-        hcan.pTxMsg = &can_tx_frame;
+    uint8_t buffer[SLCAN_MTU];
+    uint16_t length;
 
-        // Transmit frame to bus
-        HAL_StatusTypeDef result = HAL_CAN_Transmit(&hcan, 50);
-        if (result == HAL_OK) {
-            led_on(LED_ACTIVITY);
-            fifo_drop_oldest_entry(&can_tx_fifo);
-        } else {
-            led_on(LED_ERROR);
+    if (can_transmitter_is_ready())
+    {
+        enter_critical();
+        if (fifo_has_slcan_command(&can_tx_fifo, &length)) {
+
+            // Retrieve the oldest frame from the transmission buffer
+            if (fifo_pop(&can_tx_fifo, buffer, length))
+            {
+                exit_critical();
+            }
+            else
+            {
+                exit_critical();
+                return;
+            }
+
+            // Convert SLCAN transmit command to CAN frame
+            CanTxMsgTypeDef can_tx_frame;
+            hcan.pTxMsg = &can_tx_frame;
+            if (!slcan_parse_transmit_command(buffer, length, &can_tx_frame))
+                return;
+
+            // Transmit frame to CAN bus
+            HAL_StatusTypeDef result = HAL_CAN_Transmit(&hcan, 50);
+            if (result == HAL_OK) {
+                led_on(LED_ACTIVITY);
+            } else {
+                led_on(LED_ERROR);
+            }
+        }
+        else
+        {
+            exit_critical();
         }
     }
 }

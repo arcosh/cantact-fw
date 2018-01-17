@@ -244,7 +244,7 @@ static int8_t CDC_Control_FS  (uint8_t cmd, uint8_t* pbuf, uint16_t length)
  * @retval Result of the opeartion: USBD_OK if all operations are OK else USBD_FAIL
  */
 
-uint8_t slcan_str[SLCAN_MTU];
+uint8_t slcan_str[SLCAN_MTU+1];
 uint8_t slcan_str_index = 0;
 
 static int8_t CDC_Receive_FS (uint8_t* Buf, uint32_t *Len)
@@ -253,12 +253,11 @@ static int8_t CDC_Receive_FS (uint8_t* Buf, uint32_t *Len)
     uint8_t n = *Len;
     uint8_t i;
     for (i = 0; i < n; i++) {
-	if (Buf[i] == '\r') {
-	    slcan_parse_str(slcan_str, slcan_str_index);
-	    slcan_str_index = 0;
-	} else {
-	    slcan_str[slcan_str_index++] = Buf[i];
-	}
+        slcan_str[slcan_str_index++] = Buf[i];
+        if (Buf[i] == SLCAN_COMMAND_TERMINATOR) {
+            slcan_parse_command(slcan_str, slcan_str_index);
+            slcan_str_index = 0;
+        }
     }
 
     // prepare for next read

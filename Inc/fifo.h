@@ -4,81 +4,74 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include "slcan.h"
 
-
-/**
- * Maximum number of elements in a FIFO
- */
-#define FIFO_SIZE   7
 
 typedef struct {
-    uint32_t StdId;
-    uint32_t ExtId;
-    uint32_t IDE;
-    uint32_t RTR;
-    uint32_t DLC;
-    uint32_t Data[8];
-} can_frame_t;
-
-typedef struct {
-    volatile can_frame_t buffer[FIFO_SIZE];
+    /**
+     * Pointer to data buffer
+     */
+    uint8_t* buffer;
 
     /**
-     * Index of the position in which to store the next frame
+     * Total size of the linked buffer
+     */
+    uint16_t size;
+
+    /**
+     * At which byte index to store incoming data
      */
     volatile uint16_t push_index;
 
     /**
-     * Index of the next frame to pop from the buffer
+     * Index of the next byte to pop from the buffer
      */
     volatile uint16_t pop_index;
 } fifo_t;
 
 
 /**
- * Initialize empty FIFO buffer for CAN frames
+ * Initialize FIFO buffer
  */
-void fifo_init(fifo_t* fifo);
+void fifo_init(fifo_t* fifo, uint8_t* buffer, uint16_t size);
 
 /**
- * Determine whether there is empty space in the buffer available or not
+ * Returns whether there is empty space available in the buffer or not
  */
-bool fifo_is_full(fifo_t* fifo);
+bool fifo_has_room(fifo_t* fifo, uint8_t length);
 
 /**
- * Determine, whether a new frame is available or not
+ * Returns whether the buffer has any data stored or not
  */
 bool fifo_is_empty(fifo_t* fifo);
 
 /**
- * Append one frame to the buffer
+ * Returns number of bytes currently stored in the buffer
  */
-void fifo_push(
-        fifo_t* fifo,
-        uint32_t StdId,
-        uint32_t ExtId,
-        uint32_t IDE,
-        uint32_t RTR,
-        uint32_t DLC,
-        uint32_t* Data
-        );
+uint16_t fifo_get_length(fifo_t* fifo);
 
 /**
- * Retrieve one frame from the buffer
+ * Returns whether the buffer contains at least one complete SLCAN command
+ * i.e. a string terminated by a carriage return character
  */
-void fifo_get_oldest_entry(
-        fifo_t* fifo,
-        uint32_t* StdId,
-        uint32_t* ExtId,
-        uint32_t* IDE,
-        uint32_t* RTR,
-        uint32_t* DLC,
-        uint32_t* Data
-        );
+bool fifo_has_slcan_command(fifo_t* fifo, uint16_t* length);
 
 /**
- * Delete the oldest frame in the buffer
+ * Append data to the buffer
+ *
+ * @param fifo      Buffer to push data to
+ * @param string    Data to push to the buffer
+ * @param length    Number of bytes to push to the buffer
  */
-void fifo_drop_oldest_entry(fifo_t* fifo);
+bool fifo_push(fifo_t* fifo, uint8_t* data, uint16_t length);
+
+/**
+ * Retrieve data from the buffer
+ *
+ * @param fifo      Buffer to retrieve data from
+ * @param data      Buffer to write data to
+ * @param length    Number of bytes to retrieve from the buffer
+ */
+bool fifo_pop(fifo_t* fifo, uint8_t* data, uint16_t length);
 
 #endif
