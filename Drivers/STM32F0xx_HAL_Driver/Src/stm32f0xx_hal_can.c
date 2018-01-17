@@ -889,20 +889,20 @@ HAL_StatusTypeDef HAL_CAN_Receive_IT(CAN_HandleTypeDef* hcan, uint8_t FIFONumber
     /* Set CAN error code to none */
     hcan->ErrorCode = HAL_CAN_ERROR_NONE;
     
-    /* Enable Error warning Interrupt */
-    __HAL_CAN_ENABLE_IT(hcan, CAN_IT_EWG);
-      
-    /* Enable Error passive Interrupt */
-    __HAL_CAN_ENABLE_IT(hcan, CAN_IT_EPV);
-      
-    /* Enable Bus-off Interrupt */
-    __HAL_CAN_ENABLE_IT(hcan, CAN_IT_BOF);
-      
-    /* Enable Last error code Interrupt */
-    __HAL_CAN_ENABLE_IT(hcan, CAN_IT_LEC);
-      
-    /* Enable Error Interrupt */
-    __HAL_CAN_ENABLE_IT(hcan, CAN_IT_ERR);
+//    /* Enable Error warning Interrupt */
+//    __HAL_CAN_ENABLE_IT(hcan, CAN_IT_EWG);
+//
+//    /* Enable Error passive Interrupt */
+//    __HAL_CAN_ENABLE_IT(hcan, CAN_IT_EPV);
+//
+//    /* Enable Bus-off Interrupt */
+//    __HAL_CAN_ENABLE_IT(hcan, CAN_IT_BOF);
+//
+//    /* Enable Last error code Interrupt */
+//    __HAL_CAN_ENABLE_IT(hcan, CAN_IT_LEC);
+//
+//    /* Enable Error Interrupt */
+//    __HAL_CAN_ENABLE_IT(hcan, CAN_IT_ERR);
 
     /* Process unlocked */
     __HAL_UNLOCK(hcan);
