@@ -75,27 +75,24 @@ int8_t slcan_parse_frame(CanRxMsgTypeDef* frame, uint8_t* buf) {
 }
 
 
-int8_t slcan_parse_command(uint8_t* buf, uint8_t len) {
-
-    /*
-     * Partially convert string input to binary
-     * beginning with 2nd character till end of string
-     * in order to simplify the hexadecimal to byte conversion below
-     */
-    for (uint8_t i=1; i < len; i++) {
-        if (buf[i] >= 'a' && buf[i] <= 'f') {
-            // Lowercase letters
-            buf[i] = buf[i] - 'a' + 10;
-        }
-        else if (buf[i] >= 'A' && buf[i] <= 'F') {
-            // Uppercase letters
-            buf[i] = buf[i] - 'A' + 10;
-        }
-        else if (buf[i] >= '0' && buf[i] <= '9') {
-            // Digits
-            buf[i] = buf[i] - '0';
-        }
+inline uint8_t hex2int(uint8_t c) {
+    if (c >= 'a' && c <= 'f') {
+        // Lowercase letters
+        c = c - 'a' + 10;
     }
+    else if (c >= 'A' && c <= 'F') {
+        // Uppercase letters
+        c = c - 'A' + 10;
+    }
+    else if (c >= '0' && c <= '9') {
+        // Digits
+        c = c - '0';
+    }
+    return c;
+}
+
+
+int8_t slcan_parse_command(uint8_t* buf, uint8_t len) {
 
     /*
      * Evaluate first byte in order to determine command type
@@ -155,7 +152,7 @@ int8_t slcan_parse_command(uint8_t* buf, uint8_t len) {
         uint32_t id = 0;
         for (uint8_t i=1; i <= 8; i++) {
             id <<= 4;
-            id += buf[i];
+            id += hex2int(buf[i]);
         }
         current_filter_id = id;
         can_set_filter(current_filter_id, current_filter_mask);
@@ -171,7 +168,7 @@ int8_t slcan_parse_command(uint8_t* buf, uint8_t len) {
         uint32_t mask = 0;
         for (uint8_t i=1; i <= 8; i++) {
             mask <<= 4;
-            mask += buf[i];
+            mask += hex2int(buf[i]);
         }
         current_filter_mask = mask;
         can_set_filter(current_filter_id, current_filter_mask);
@@ -223,25 +220,28 @@ bool slcan_parse_transmit_command(uint8_t* buffer, uint16_t length, CanTxMsgType
         // Parse hexadecimal representation of standard CAN ID
         for (uint8_t j=i; j <= SLCAN_STD_ID_LEN; j++, i++) {
             frame->StdId <<= 4;
-            frame->StdId += buffer[j];
+            frame->StdId += hex2int(buffer[j]);
         }
     } else {
         // Parse hexadecimal representation of extended CAN ID
         for (uint8_t j=i; j <= SLCAN_EXT_ID_LEN; j++, i++) {
             frame->ExtId <<= 4;
-            frame->ExtId += buffer[j];
+            frame->ExtId += hex2int(buffer[j]);
         }
     }
 
-    frame->DLC = buffer[i++];
+    frame->DLC = hex2int(buffer[i++]);
     if (frame->DLC < 0 || frame->DLC > 8) {
         return false;
     }
 
+    if (i + 1 + frame->DLC*2 > length)
+        return false;
+
     // Parse data from hexadecimal representation
     for (uint8_t j=0; j < frame->DLC; j++, i+=2) {
-        frame->Data[j] = (buffer[i] << 4);
-        frame->Data[j] += buffer[i+1];
+        frame->Data[j] = (hex2int(buffer[i]) << 4);
+        frame->Data[j] += hex2int(buffer[i+1]);
     }
 
     return true;
