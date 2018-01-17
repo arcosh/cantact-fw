@@ -40,6 +40,7 @@
 /* External variables --------------------------------------------------------*/
 
 extern PCD_HandleTypeDef hpcd_USB_FS;
+extern CAN_HandleTypeDef hcan;
 
 /******************************************************************************/
 /*            Cortex-M0 Processor Interruption and Exception Handlers         */ 
@@ -70,7 +71,7 @@ void SysTick_Handler(void)
   HAL_IncTick();
   HAL_SYSTICK_IRQHandler();
   /* USER CODE BEGIN SysTick_IRQn 1 */
-
+  __HAL_CAN_ENABLE_IT(&hcan, CAN_IT_FMP0);
   /* USER CODE END SysTick_IRQn 1 */
 }
 

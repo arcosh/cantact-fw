@@ -48,7 +48,7 @@ inline void can_enable_interrupt_switches() {
      * FMP0: FIFO0 message pending interrupt switch
      * TME: Transmit mailbox empty
      */
-//    __HAL_CAN_ENABLE_IT(&hcan, CAN_IT_FMP0);
+    __HAL_CAN_ENABLE_IT(&hcan, CAN_IT_FMP0);
 }
 
 
@@ -118,7 +118,7 @@ void CEC_CAN_IRQHandler()
     HAL_CAN_IRQHandler(&hcan);
 
     // Re-enable interrupts after the HAL IRQ handler disables them
-//    can_enable_interrupt_switches();
+    can_enable_interrupt_switches();
 }
 
 
