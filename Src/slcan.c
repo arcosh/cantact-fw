@@ -9,9 +9,6 @@
 #include "slcan.h"
 #include <error.h>
 
-static uint32_t current_filter_id = 0;
-static uint32_t current_filter_mask = 0;
-
 
 int8_t slcan_parse_frame(CanRxMsgTypeDef* frame, uint8_t* buf) {
     uint8_t i = 0;
@@ -93,6 +90,9 @@ inline uint8_t hex2int(uint8_t c) {
 
 
 int8_t slcan_parse_command(uint8_t* buf, uint8_t len) {
+
+    static uint32_t current_filter_id = 0;
+    static uint32_t current_filter_mask = 0;
 
     /*
      * Evaluate first byte in order to determine command type
@@ -206,11 +206,11 @@ bool slcan_parse_transmit_command(uint8_t* buffer, uint16_t length, CanTxMsgType
     // Parser position in the buffer
     uint8_t i = 0;
 
-    frame->IDE = ((buffer[i] == SLCAN_TRANSMIT_STANDARD) || (buffer[i] == SLCAN_TRANSMIT_REQUEST_STANDARD))
+    frame->IDE = ((buffer[0] == SLCAN_TRANSMIT_STANDARD) || (buffer[0] == SLCAN_TRANSMIT_REQUEST_STANDARD))
                     ? CAN_ID_STD
                     : CAN_ID_EXT;
 
-    frame->RTR = ((buffer[i] == SLCAN_TRANSMIT_REQUEST_STANDARD) || (buffer[i] == SLCAN_TRANSMIT_REQUEST_EXTENDED))
+    frame->RTR = ((buffer[0] == SLCAN_TRANSMIT_REQUEST_STANDARD) || (buffer[0] == SLCAN_TRANSMIT_REQUEST_EXTENDED))
                     ? CAN_RTR_REMOTE
                     : CAN_RTR_DATA;
 
@@ -218,15 +218,15 @@ bool slcan_parse_transmit_command(uint8_t* buffer, uint16_t length, CanTxMsgType
     frame->ExtId = 0;
     if (frame->IDE == CAN_ID_STD) {
         // Parse hexadecimal representation of standard CAN ID
-        for (uint8_t j=i; j <= SLCAN_STD_ID_LEN; j++, i++) {
+        for (i=1; i <= SLCAN_STD_ID_LEN; i++) {
             frame->StdId <<= 4;
-            frame->StdId += hex2int(buffer[j]);
+            frame->StdId += hex2int(buffer[i]);
         }
     } else {
         // Parse hexadecimal representation of extended CAN ID
-        for (uint8_t j=i; j <= SLCAN_EXT_ID_LEN; j++, i++) {
+        for (i=1; i <= SLCAN_EXT_ID_LEN; i++) {
             frame->ExtId <<= 4;
-            frame->ExtId += hex2int(buffer[j]);
+            frame->ExtId += hex2int(buffer[i]);
         }
     }
 
