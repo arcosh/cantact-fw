@@ -68,6 +68,11 @@ void can_send(CanTxMsgTypeDef* frame);
 void can_set_silent(uint8_t silent);
 
 /**
+ * Aborts transmissions with errors
+ */
+void can_check_transmit_mailboxes();
+
+/**
  * Perform all CAN-related tasks in the queue
  */
 void can_process();

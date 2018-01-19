@@ -17,4 +17,11 @@
 #define CAN_RX_BUFFER_SIZE      370
 #define CAN_TX_BUFFER_SIZE      370
 
+#define CAN_TX_TIMEOUT          20
+
+/**
+ * Number of @ref led_process iterations the LED should stay on
+ */
+#define LED_ON_DURATION         250
+
 #endif

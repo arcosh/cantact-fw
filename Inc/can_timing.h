@@ -31,7 +31,7 @@ enum can_prescaler {
 
 
 #ifdef CAN_SAMPLE_POINT_94
-#define CAN_SJW     CAN_SJW_1TQ
+#define CAN_SJW     CAN_SJW_2TQ
 #define CAN_BS1     CAN_BS1_14TQ
 #define CAN_BS2     CAN_BS2_1TQ
 

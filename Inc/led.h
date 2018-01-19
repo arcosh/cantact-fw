@@ -8,6 +8,7 @@
 
 #include "stm32f0xx_hal.h"
 #include "platform.h"
+#include "config.h"
 
 typedef enum
 {
@@ -26,11 +27,6 @@ typedef enum
 #define LED_POWER_ENABLED
 #define LED_ACTIVITY_ENABLED
 #define LED_ERROR_ENABLED
-
-/**
- * Number of @ref led_process iterations the LED should stay on
- */
-#define LED_ON_DURATION        10
 
 
 /**

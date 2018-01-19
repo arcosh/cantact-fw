@@ -144,7 +144,7 @@ void can_enable(void) {
     hcan.Init.AWUM = ENABLE;
     hcan.Init.NART = DISABLE;
     hcan.Init.RFLM = ENABLE;
-    hcan.Init.TXFP = ENABLE;
+    hcan.Init.TXFP = 1;
     if (HAL_CAN_Init(&hcan) == HAL_OK)
     {
         led_on(LED_ACTIVITY);
@@ -262,6 +262,41 @@ void can_set_silent(uint8_t silent) {
 }
 
 
+void can_check_transmit_mailboxes()
+{
+    static bool timeout_enabled[3] = {false, false, false};
+    static uint32_t timeout_start_ms[3];
+    const uint32_t error_flag[3] = {CAN_TSR_TERR0, CAN_TSR_TERR1, CAN_TSR_TERR2};
+    const uint32_t arbitration_lost_flag[3] = {CAN_TSR_ALST0, CAN_TSR_ALST1, CAN_TSR_ALST2};
+    const uint32_t abort_transmission_switch[3] = {CAN_TSR_ABRQ0, CAN_TSR_ABRQ1, CAN_TSR_ABRQ2};
+
+    for (uint8_t i=0; i<3; i++)
+    {
+        if ((hcan.Instance->TSR & error_flag[i])
+         &&(!(hcan.Instance->TSR & arbitration_lost_flag[i])))
+        {
+            if (timeout_enabled[i])
+            {
+                if (HAL_GetTick() - timeout_start_ms[i] > CAN_TX_TIMEOUT)
+                {
+                    // Abort transmission
+                    timeout_enabled[i] = false;
+                    hcan.Instance->TSR |= abort_transmission_switch[i];
+                    hcan.Instance->TSR &= ~error_flag[i];
+                    led_on(LED_ERROR);
+                }
+            }
+            else
+            {
+                // Enable timeout for this mailbox
+                timeout_start_ms[i] = HAL_GetTick();
+                timeout_enabled[i] = true;
+            }
+        }
+    }
+}
+
+
 void can_process_rx() {
 
     uint8_t buffer[SLCAN_MTU];
@@ -330,7 +365,7 @@ void can_process_tx() {
                 return;
 
             // Transmit frame to CAN bus
-            HAL_StatusTypeDef result = HAL_CAN_Transmit(&hcan, 50);
+            HAL_StatusTypeDef result = HAL_CAN_Transmit(&hcan, 300);
             if (result == HAL_OK) {
                 led_on(LED_ACTIVITY);
             } else {
@@ -350,4 +385,9 @@ void can_process() {
         return;
     can_process_rx();
     can_process_tx();
+
+    // Make sure, the transmitter won't become permanently blocked
+    can_check_transmit_mailboxes();
+    // Make sure, the receiver is always on
+//    __HAL_CAN_ENABLE_IT(&hcan, CAN_IT_FMP0);
 }

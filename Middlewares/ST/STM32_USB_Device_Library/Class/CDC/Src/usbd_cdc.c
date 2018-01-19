@@ -835,6 +835,12 @@ uint8_t  USBD_CDC_TransmitPacket(USBD_HandleTypeDef *pdev)
 
   if(pdev->pClassData != NULL)
   {
+      uint32_t time = HAL_GetTick();
+      while (hcdc->TxState != 0)
+      {
+          if (HAL_GetTick() - time > 200)
+              break;
+      }
     if(hcdc->TxState == 0)
     {
 
