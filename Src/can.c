@@ -43,21 +43,49 @@ uint8_t can_tx_buffer[CAN_TX_BUFFER_SIZE];
 fifo_t can_tx_fifo;
 
 
-inline void can_enable_interrupt_switches() {
-    /*
-     * FMP0: FIFO0 message pending interrupt switch
-     * TME: Transmit mailbox empty
-     */
-    __HAL_CAN_ENABLE_IT(&hcan, CAN_IT_FMP0);
-}
-
-
 void can_init(void) {
     // Default speed: 1 Mbps
     hcan.Instance = CAN_PERIPHERAL;
     prescaler = CAN_PRESCALER_1000K;
     // Reset bxCAN peripheral
     can_disable();
+}
+
+
+void HAL_CAN_MspInit(CAN_HandleTypeDef* hcan)
+{
+  if(hcan->Instance == CAN_PERIPHERAL)
+  {
+    __CAN_CLK_ENABLE();
+
+    GPIO_InitTypeDef GPIO_InitStruct;
+
+    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+    GPIO_InitStruct.Pull = GPIO_PULLUP;
+    GPIO_InitStruct.Speed = GPIO_SPEED_HIGH;
+    GPIO_InitStruct.Alternate = GPIO_AF4_CAN;
+    GPIO_InitStruct.Pin = CAN_RX_PIN;
+    HAL_GPIO_Init(CAN_RX_PORT, &GPIO_InitStruct);
+
+    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+    GPIO_InitStruct.Pull = GPIO_PULLUP;
+    GPIO_InitStruct.Speed = GPIO_SPEED_HIGH;
+    GPIO_InitStruct.Alternate = GPIO_AF4_CAN;
+    GPIO_InitStruct.Pin = CAN_TX_PIN;
+    HAL_GPIO_Init(CAN_TX_PORT, &GPIO_InitStruct);
+  }
+}
+
+
+void HAL_CAN_MspDeInit(CAN_HandleTypeDef* hcan)
+{
+  if(hcan->Instance == CAN_PERIPHERAL)
+  {
+    __CAN_CLK_DISABLE();
+
+    HAL_GPIO_DeInit(CAN_RX_PORT, CAN_RX_PIN);
+    HAL_GPIO_DeInit(CAN_TX_PORT, CAN_TX_PIN);
+  }
 }
 
 
@@ -110,6 +138,15 @@ void HAL_CAN_ErrorCallback(CAN_HandleTypeDef *hcan)
 
     /* Enable Error Interrupt */
     __HAL_CAN_DISABLE_IT(hcan, CAN_IT_ERR);
+}
+
+
+inline void can_enable_interrupt_switches() {
+    /*
+     * FMP0: FIFO0 message pending interrupt switch
+     * TME: Transmit mailbox empty
+     */
+    __HAL_CAN_ENABLE_IT(&hcan, CAN_IT_FMP0);
 }
 
 
