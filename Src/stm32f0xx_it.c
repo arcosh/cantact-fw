@@ -61,21 +61,6 @@ void USB_IRQHandler(void)
   /* USER CODE END USB_IRQn 1 */
 }
 
-/**
-* @brief This function handles System tick timer.
-*/
-void SysTick_Handler(void)
-{
-  /* USER CODE BEGIN SysTick_IRQn 0 */
-
-  /* USER CODE END SysTick_IRQn 0 */
-  HAL_IncTick();
-  HAL_SYSTICK_IRQHandler();
-  /* USER CODE BEGIN SysTick_IRQn 1 */
-  __HAL_CAN_ENABLE_IT(&hcan, CAN_IT_FMP0);
-  /* USER CODE END SysTick_IRQn 1 */
-}
-
 /* USER CODE BEGIN 1 */
 
 /* USER CODE END 1 */

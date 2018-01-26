@@ -66,10 +66,23 @@ void SystemClock_Config()
 }
 
 
+void HAL_MspInit(void)
+{
+    HAL_NVIC_SetPriority(SysTick_IRQn, IRQ_PRIORITY_SYSTICK, 0);
+}
+
+
 void MX_GPIO_Init()
 {
     /* GPIO Ports Clock Enable */
     __GPIOF_CLK_ENABLE();
     __GPIOA_CLK_ENABLE();
     __GPIOB_CLK_ENABLE();
+}
+
+
+void SysTick_Handler()
+{
+    HAL_IncTick();
+    HAL_SYSTICK_IRQHandler();
 }
