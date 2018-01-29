@@ -26,7 +26,9 @@ typedef enum
 
 #define LED_POWER_ENABLED
 #define LED_ACTIVITY_ENABLED
+#if PLATFORM == CANTACT
 #define LED_ERROR_ENABLED
+#endif
 
 
 /**

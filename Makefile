@@ -80,6 +80,18 @@ INCLUDES += $(USER_INCLUDES)
 # macros for gcc
 DEFS = -D$(CORE) $(USER_DEFS) -D$(TARGET_DEVICE)
 
+# Select target hardware
+ifdef PLATFORM
+ifneq ($(filter default DEFAULT cantact CANTACT CANtact,$(PLATFORM)),)
+DEFS += -DPLATFORM=CANTACT
+endif
+ifneq ($(filter nucleo NUCLEO Nucleo,$(PLATFORM)),)
+DEFS += -DPLATFORM=NUCLEO
+endif
+else
+DEFS += -DPLATFORM=CANTACT
+endif
+
 # GCC compiler flags
 CFLAGS += $(DEFS) $(INCLUDES)
 CFLAGS += -std=gnu99

@@ -18,6 +18,8 @@ static uint32_t error_led_last_on = 0xFF;
 
 void led_init()
 {
+    __GPIOB_CLK_ENABLE();
+
     GPIO_InitTypeDef GPIO_InitStruct;
 
     #ifdef LED_POWER_ENABLED
