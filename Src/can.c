@@ -366,7 +366,7 @@ void can_process_rx() {
 
         // Transmit SLCAN string to PC
         // via USB
-        #if PC_INTERFACE == PC_IF_USB
+        #ifdef PC_INTERFACE_USB
         uint8_t result = CDC_Transmit_FS(buffer, length);
         if (result == USBD_OK) {
             led_on(LED_ACTIVITY);
@@ -374,7 +374,7 @@ void can_process_rx() {
             led_on(LED_ERROR);
         }
         #endif
-        #if PC_INTERFACE == PC_IF_UART
+        #ifdef PC_INTERFACE_UART
         _write(0, (char*) buffer, length);
         #endif
     }
