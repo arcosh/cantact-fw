@@ -25,7 +25,7 @@ BUILD_DIR = build
 LD_SCRIPT = STM32F042C6_FLASH.ld
 
 # USER_DEFS user defined macros
-USER_DEFS = -D CANTACT_BUILD_NUMBER=$(BUILD_NUMBER)
+USER_DEFS = -DCANTACT_BUILD_NUMBER=$(BUILD_NUMBER)
 
 # USB_INCLUDES: includes for the usb library
 USB_INCLUDES = -IMiddlewares/ST/STM32_USB_Device_Library/Core/Inc
