@@ -1,6 +1,7 @@
 
 #include "clock.h"
 #include "stm32f0xx_hal.h"
+#include "platform.h"
 #include "config.h"
 
 
@@ -14,6 +15,7 @@ void SystemClock_Config()
     // set up the oscillators
     // use internal HSI48 (48 MHz), no PLL
     RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI48;
+    RCC_OscInitStruct.HSEState = RCC_HSE_OFF;
     RCC_OscInitStruct.HSI48State = RCC_HSI48_ON;
     RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
 

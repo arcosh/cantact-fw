@@ -23,10 +23,7 @@ BUILD_DIR = build
 LD_SCRIPT = STM32F042C6_FLASH.ld
 
 # USER_DEFS user defined macros
-USER_DEFS = -D HSI48_VALUE=48000000 -D HSE_VALUE=16000000
-USER_DEFS += -D CANTACT_BUILD_NUMBER=$(BUILD_NUMBER)
-# USER_INCLUDES: user defined includes
-USER_INCLUDES =
+USER_DEFS = -D CANTACT_BUILD_NUMBER=$(BUILD_NUMBER)
 
 # USB_INCLUDES: includes for the usb library
 USB_INCLUDES = -IMiddlewares/ST/STM32_USB_Device_Library/Core/Inc
@@ -83,13 +80,13 @@ DEFS = -D$(CORE) $(USER_DEFS) -D$(TARGET_DEVICE)
 # Select target hardware
 ifdef PLATFORM
 ifneq ($(filter default DEFAULT cantact CANTACT CANtact,$(PLATFORM)),)
-DEFS += -DPLATFORM=CANTACT
+DEFS += -DPLATFORM_CANTACT
 endif
 ifneq ($(filter nucleo NUCLEO Nucleo,$(PLATFORM)),)
-DEFS += -DPLATFORM=NUCLEO
+DEFS += -DPLATFORM_NUCLEO
 endif
 else
-DEFS += -DPLATFORM=CANTACT
+DEFS += -DPLATFORM_CANTACT
 endif
 
 # GCC compiler flags
