@@ -8,13 +8,15 @@
 # user configuration:
 #######################################
 
-BUILD_NUMBER ?= 0
+ifndef BUILD_NUMBER
+BUILD_NUMBER = $(shell git rev-parse --short HEAD)
+endif
 
 # SOURCES: list of sources in the user application
 SOURCES = $(wildcard Src/*.c)
 
 # TARGET: name of the user application
-TARGET = CANtact-b$(BUILD_NUMBER)
+TARGET = CANtact
 
 # BUILD_DIR: directory to place output files in
 BUILD_DIR = build
