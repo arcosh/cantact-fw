@@ -31,6 +31,8 @@ int main()
     uart_init();
     #endif
 
+    can_enable();
+
     // Loop forever
     for (;;)
     {
