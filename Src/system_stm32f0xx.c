@@ -82,6 +82,8 @@
   */
 
 #include "stm32f0xx.h"
+#include "platform.h"
+#include "config.h"
 
 /**
   * @}

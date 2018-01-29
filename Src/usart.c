@@ -1,5 +1,6 @@
 
 #include "platform.h"
+#include "config.h"
 #include "usart.h"
 #include <stm32f0xx_hal.h>
 
@@ -33,8 +34,8 @@ void uart_init()
     __USART2_CLK_ENABLE();
 
     // Initialize USART2 as UART interface
-    husart2.Instance = UART_INSTANCE;
-    husart2.Init.BaudRate = 460800;
+    husart2.Instance = UART_PERIPHERAL;
+    husart2.Init.BaudRate = UART_BAUDRATE;
     husart2.Init.WordLength = UART_WORDLENGTH_8B;
     husart2.Init.StopBits = UART_STOPBITS_1;
     husart2.Init.Parity = UART_PARITY_NONE;

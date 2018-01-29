@@ -7,6 +7,7 @@
 #define _LED_H
 
 #include "stm32f0xx_hal.h"
+// platform.h must be included prior to config.h
 #include "platform.h"
 #include "config.h"
 
@@ -17,17 +18,19 @@ typedef enum
     LED_ERROR,
 } led_index_t;
 
+#ifdef LED_POWER_ENABLED
 #define LED_POWER_PORT      LED_GREEN_PORT
 #define LED_POWER_PIN       LED_GREEN_PIN
+#endif
+
+#ifdef LED_ACTIVITY_ENABLED
 #define LED_ACTIVITY_PORT   LED_GREEN_PORT
 #define LED_ACTIVITY_PIN    LED_GREEN_PIN
+#endif
+
+#ifdef LED_ERROR_ENABLED
 #define LED_ERROR_PORT      LED_RED_PORT
 #define LED_ERROR_PIN       LED_RED_PIN
-
-#define LED_POWER_ENABLED
-#define LED_ACTIVITY_ENABLED
-#if PLATFORM == CANTACT
-#define LED_ERROR_ENABLED
 #endif
 
 

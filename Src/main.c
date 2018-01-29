@@ -24,10 +24,10 @@ int main()
     MX_GPIO_Init();
     can_init();
     led_init();
-    #if PC_INTERFACE == PC_IF_USB
+    #ifdef PC_INTERFACE_USB
     MX_USB_DEVICE_Init();
     #endif
-    #if PC_INTERFACE == PC_IF_UART
+    #ifdef PC_INTERFACE_UART
     uart_init();
     #endif
 

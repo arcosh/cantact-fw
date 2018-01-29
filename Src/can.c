@@ -35,6 +35,11 @@ enum can_bus_state bus_state;
 CanRxMsgTypeDef can_rx_frame;
 
 /**
+ * Transmission buffer for one frame
+ */
+CanTxMsgTypeDef can_tx_frame;
+
+/**
  * Buffer for incoming CAN frames
  */
 uint8_t can_rx_buffer[CAN_RX_BUFFER_SIZE];
@@ -60,6 +65,8 @@ void HAL_CAN_MspInit(CAN_HandleTypeDef* hcan)
 {
   if(hcan->Instance == CAN_PERIPHERAL)
   {
+    __GPIOA_CLK_ENABLE();
+    __GPIOB_CLK_ENABLE();
     __CAN_CLK_ENABLE();
 
     GPIO_InitTypeDef GPIO_InitStruct;
@@ -406,7 +413,6 @@ void can_process_tx() {
             }
 
             // Convert SLCAN transmit command to CAN frame
-            CanTxMsgTypeDef can_tx_frame;
             hcan.pTxMsg = &can_tx_frame;
             if (!slcan_parse_transmit_command(buffer, length, &can_tx_frame))
                 return;
