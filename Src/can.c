@@ -4,11 +4,15 @@
  */
 
 #include "can.h"
+#include "platform.h"
 #include "config.h"
 #include "slcan.h"
-#include "usbd_cdc_if.h"
 #include "led.h"
 #include "fifo.h"
+
+#include "usbd_cdc_if.h"
+#include "usart.h"
+
 
 /**
  * Handle to access the MCU's CAN peripheral
@@ -353,13 +357,19 @@ void can_process_rx() {
             return;
         }
 
-        // Transmit SLCAN string to PC via USB
+        // Transmit SLCAN string to PC
+        // via USB
+        #if PC_INTERFACE == PC_IF_USB
         uint8_t result = CDC_Transmit_FS(buffer, length);
         if (result == USBD_OK) {
             led_on(LED_ACTIVITY);
         } else {
             led_on(LED_ERROR);
         }
+        #endif
+        #if PC_INTERFACE == PC_IF_UART
+        _write(0, (char*) buffer, length);
+        #endif
     }
     else
     {
