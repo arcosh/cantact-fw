@@ -17,10 +17,17 @@
 
 #define UART_BAUDRATE           460800
 
-#define UART_RX_BUFFER_SIZE     350
-#define UART_TX_BUFFER_SIZE     350
+#ifdef PLATFORM_NUCLEO
+#define UART_RX_BUFFER_SIZE     750
+#define UART_TX_BUFFER_SIZE     750
+#define CAN_RX_BUFFER_SIZE      750
+#define CAN_TX_BUFFER_SIZE      750
+#endif
+
+#ifdef PLATFORM_CANTACT
 #define CAN_RX_BUFFER_SIZE      350
 #define CAN_TX_BUFFER_SIZE      350
+#endif
 
 #define CAN_TX_TIMEOUT          20
 
