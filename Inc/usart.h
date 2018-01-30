@@ -7,6 +7,7 @@
  */
 void uart_init();
 
+
 /*
  * Low-level i/o functions for newlib, e.g. for printf
  */

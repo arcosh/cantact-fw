@@ -17,6 +17,8 @@
 
 #define UART_BAUDRATE           460800
 
+#define UART_RX_BUFFER_SIZE     350
+#define UART_TX_BUFFER_SIZE     350
 #define CAN_RX_BUFFER_SIZE      350
 #define CAN_TX_BUFFER_SIZE      350
 
