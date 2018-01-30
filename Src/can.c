@@ -46,7 +46,7 @@ uint8_t can_rx_buffer[CAN_RX_BUFFER_SIZE];
 fifo_t can_rx_fifo;
 
 /**
- * Buffer for outgoing CAN frames
+ * Buffer for outgoing SLCAN frames
  */
 uint8_t can_tx_buffer[CAN_TX_BUFFER_SIZE];
 fifo_t can_tx_fifo;
