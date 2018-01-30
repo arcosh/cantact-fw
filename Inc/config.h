@@ -17,10 +17,10 @@
 
 #define UART_BAUDRATE           460800
 
-#define UART_RX_BUFFER_SIZE     370
-#define UART_TX_BUFFER_SIZE     370
-#define CAN_RX_BUFFER_SIZE      370
-#define CAN_TX_BUFFER_SIZE      370
+#define UART_RX_BUFFER_SIZE     750
+#define UART_TX_BUFFER_SIZE     750
+#define CAN_RX_BUFFER_SIZE      750
+#define CAN_TX_BUFFER_SIZE      750
 
 #define CAN_TX_TIMEOUT          20
 
