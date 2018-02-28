@@ -112,3 +112,35 @@ bool fifo_pop(fifo_t* fifo, uint8_t* data, uint16_t length)
     }
     return true;
 }
+
+
+bool fifo_get(fifo_t* fifo, uint8_t* data, uint16_t length)
+{
+    if (fifo_get_length(fifo) < length)
+        // There is fewer bytes in the buffer than requested.
+        return false;
+
+    // Make a copy of the pop index, don't touch the original
+    uint16_t pop_index = fifo->pop_index;
+
+    for (uint16_t i=0; i<length; i++)
+    {
+        // Copy byte from buffer
+        data[i] = fifo->buffer[pop_index];
+
+        // Increment the pop_index
+        pop_index = (pop_index + 1) % fifo->size;
+    }
+    return true;
+}
+
+
+bool fifo_drop_oldest(fifo_t* fifo, uint16_t length)
+{
+    if (fifo_get_length(fifo) < length)
+        // There is fewer bytes in the buffer than you wish to delete.
+        return false;
+
+    fifo->pop_index = (fifo->pop_index + length) % fifo->size;
+    return true;
+}

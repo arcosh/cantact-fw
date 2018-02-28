@@ -74,4 +74,8 @@ bool fifo_push(fifo_t* fifo, uint8_t* data, uint16_t length);
  */
 bool fifo_pop(fifo_t* fifo, uint8_t* data, uint16_t length);
 
+bool fifo_get(fifo_t* fifo, uint8_t* data, uint16_t length);
+
+bool fifo_drop_oldest(fifo_t* fifo, uint16_t length);
+
 #endif

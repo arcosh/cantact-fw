@@ -32,7 +32,7 @@ USB_INCLUDES = -IMiddlewares/ST/STM32_USB_Device_Library/Core/Inc
 USB_INCLUDES += -IMiddlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc
 
 # USER_CFLAGS: user C flags (enable warnings, enable debug info)
-USER_CFLAGS = -Wall -g -ffunction-sections -fdata-sections -O3
+USER_CFLAGS = -Wall -g -ffunction-sections -fdata-sections -Og
 # USER_LDFLAGS:  user LD flags
 USER_LDFLAGS = -fno-exceptions -ffunction-sections -fdata-sections -Wl,--gc-sections
 

@@ -7,6 +7,7 @@
 #include "can.h"
 #include "fifo.h"
 #include "slcan.h"
+#include "platform.h"
 #include <error.h>
 
 
@@ -72,20 +73,24 @@ int8_t slcan_parse_frame(CanRxMsgTypeDef* frame, uint8_t* buf) {
 }
 
 
-inline uint8_t hex2int(uint8_t c) {
-    if (c >= 'a' && c <= 'f') {
+inline bool hex2int(uint8_t x, uint8_t* c) {
+    if (x >= 'a' && x <= 'f') {
         // Lowercase letters
-        c = c - 'a' + 10;
+        *c = x - 'a' + 10;
+        return true;
     }
-    else if (c >= 'A' && c <= 'F') {
+    if (x >= 'A' && x <= 'F') {
         // Uppercase letters
-        c = c - 'A' + 10;
+        *c = x - 'A' + 10;
+        return true;
     }
-    else if (c >= '0' && c <= '9') {
+    if (x >= '0' && x <= '9') {
         // Digits
-        c = c - '0';
+        *c = x - '0';
+        return true;
     }
-    return c;
+    // Not a hexadecimal digit
+    return false;
 }
 
 
@@ -150,9 +155,12 @@ int8_t slcan_parse_command(uint8_t* buf, uint8_t len) {
 
         // set filter command
         uint32_t id = 0;
+        uint8_t c;
         for (uint8_t i=1; i <= 8; i++) {
+            if (!hex2int(buf[i], &c))
+                return ERROR_SLCAN_INVALID_ARGUMENT;
             id <<= 4;
-            id += hex2int(buf[i]);
+            id += c;
         }
         current_filter_id = id;
         can_set_filter(current_filter_id, current_filter_mask);
@@ -166,9 +174,12 @@ int8_t slcan_parse_command(uint8_t* buf, uint8_t len) {
 
         // set mask command
         uint32_t mask = 0;
+        uint8_t c;
         for (uint8_t i=1; i <= 8; i++) {
+            if (!hex2int(buf[i], &c))
+                return ERROR_SLCAN_INVALID_ARGUMENT;
             mask <<= 4;
-            mask += hex2int(buf[i]);
+            mask += c;
         }
         current_filter_mask = mask;
         can_set_filter(current_filter_id, current_filter_mask);
@@ -179,9 +190,14 @@ int8_t slcan_parse_command(uint8_t* buf, uint8_t len) {
             || (buf[0] == SLCAN_TRANSMIT_REQUEST_STANDARD)
             || (buf[0] == SLCAN_TRANSMIT_REQUEST_EXTENDED)) {
         extern fifo_t can_tx_fifo;
-        if (fifo_push(&can_tx_fifo, buf, len))
+        enter_critical();
+        bool result = fifo_push(&can_tx_fifo, buf, len);
+        exit_critical();
+        if (result)
+        {
             // ok
             return SUCCESS;
+        }
         // error
         return ERROR_TX_FIFO_OVERRUN;
     }
@@ -206,6 +222,9 @@ bool slcan_parse_transmit_command(uint8_t* buffer, uint16_t length, CanTxMsgType
     // Parser position in the buffer
     uint8_t i = 0;
 
+    // Variable for hex2int() to store a value in
+    uint8_t c;
+
     frame->IDE = ((buffer[0] == SLCAN_TRANSMIT_STANDARD) || (buffer[0] == SLCAN_TRANSMIT_REQUEST_STANDARD))
                     ? CAN_ID_STD
                     : CAN_ID_EXT;
@@ -219,30 +238,42 @@ bool slcan_parse_transmit_command(uint8_t* buffer, uint16_t length, CanTxMsgType
     if (frame->IDE == CAN_ID_STD) {
         // Parse hexadecimal representation of standard CAN ID
         for (i=1; i <= SLCAN_STD_ID_LEN; i++) {
+            if (!hex2int(buffer[i], &c))
+                return false;
             frame->StdId <<= 4;
-            frame->StdId += hex2int(buffer[i]);
+            frame->StdId += c;
         }
     } else {
         // Parse hexadecimal representation of extended CAN ID
         for (i=1; i <= SLCAN_EXT_ID_LEN; i++) {
+            if (!hex2int(buffer[i], &c))
+                return false;
             frame->ExtId <<= 4;
-            frame->ExtId += hex2int(buffer[i]);
+            frame->ExtId += c;
         }
     }
 
-    frame->DLC = hex2int(buffer[i++]);
+    if (!hex2int(buffer[i++], &c))
+        return false;
+    frame->DLC = c;
     if (frame->DLC < 0 || frame->DLC > 8) {
         return false;
     }
 
-    if (i + 1 + frame->DLC*2 > length)
+    // Buffer must contain: 't' + StdID[3] + length[1] + 0-8xData[2] + '\r'
+    if (6 + frame->DLC*2 > length)
         return false;
 
     // Parse data from hexadecimal representation
-    for (uint8_t j=0; j < frame->DLC; j++, i+=2) {
-        frame->Data[j] = (hex2int(buffer[i]) << 4);
-        frame->Data[j] += hex2int(buffer[i+1]);
+    for (uint8_t j=0; j < frame->DLC; j++) {
+        if (!hex2int(buffer[i++], &c))
+            return false;
+        frame->Data[j] = (c << 4);
+        if (!hex2int(buffer[i++], &c))
+            return false;
+        frame->Data[j] += c;
     }
 
-    return true;
+    // Last byte must be the terminator
+    return (buffer[i] == SLCAN_COMMAND_TERMINATOR);
 }

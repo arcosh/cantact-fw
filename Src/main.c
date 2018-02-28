@@ -36,7 +36,9 @@ int main()
     // Loop forever
     for (;;)
     {
+        uart_process();
         can_process();
         led_process();
+        exit_critical();
     }
 }

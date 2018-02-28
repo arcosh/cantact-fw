@@ -61,7 +61,14 @@
 #define CAN_TX_PIN      GPIO_PIN_12
 #endif
 
-#define enter_critical()    do { asm("CPSID  i"); __DSB(); __ISB(); } while (0);
-#define exit_critical()     asm("CPSIE  i");
+#define CRITICAL
+// __ISB();
+#ifdef CRITICAL
+#define enter_critical()    do { asm("CPSID  i"); __DSB(); } while (0);
+#define exit_critical()     do { __DSB(); asm("CPSIE  i"); __ISB(); } while (0);
+#else
+#define enter_critical()    do {} while (0);
+#define exit_critical()     do {} while (0);
+#endif
 
 #endif
