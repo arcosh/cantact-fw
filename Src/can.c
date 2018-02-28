@@ -50,6 +50,7 @@ fifo_t can_rx_fifo;
  */
 uint8_t can_tx_buffer[CAN_TX_BUFFER_SIZE];
 fifo_t can_tx_fifo;
+uint16_t length_last_tx_frame = 0;
 
 
 void can_init(void) {
@@ -104,10 +105,12 @@ void HAL_CAN_RxCpltCallback(CAN_HandleTypeDef* hcan)
 {
     // Convert frame to SLCAN string
     uint8_t buffer[SLCAN_MTU];
+    enter_critical();
     uint16_t length = slcan_parse_frame(hcan->pRxMsg, buffer);
 
     // Append SLCAN string to buffer
     fifo_push(&can_rx_fifo, buffer, length);
+    exit_critical();
 
     // Receive more frames
     HAL_CAN_Receive_IT(hcan, CAN_FIFO0);
@@ -116,8 +119,14 @@ void HAL_CAN_RxCpltCallback(CAN_HandleTypeDef* hcan)
 
 void HAL_CAN_TxCpltCallback(CAN_HandleTypeDef *hcan)
 {
-    // Remove last transmitted frame from buffer
-//    fifo_drop_oldest_entry(&can_tx_fifo);
+    if (length_last_tx_frame == 0)
+        return;
+
+    // Remove last transmitted frame from FIFO
+    enter_critical();
+    fifo_drop_oldest(&can_tx_fifo, length_last_tx_frame);
+    length_last_tx_frame = 0;
+    exit_critical();
 }
 
 
@@ -149,6 +158,9 @@ void HAL_CAN_ErrorCallback(CAN_HandleTypeDef *hcan)
 
     /* Enable Error Interrupt */
     __HAL_CAN_DISABLE_IT(hcan, CAN_IT_ERR);
+
+    __HAL_CAN_ENABLE_IT(hcan, CAN_IT_FMP0);
+    __HAL_CAN_ENABLE_IT(hcan, CAN_IT_TME);
 }
 
 
@@ -158,6 +170,7 @@ inline void can_enable_interrupt_switches() {
      * TME: Transmit mailbox empty
      */
     __HAL_CAN_ENABLE_IT(&hcan, CAN_IT_FMP0);
+//    __HAL_CAN_ENABLE_IT(&hcan, CAN_IT_TME);
 }
 
 
@@ -320,8 +333,8 @@ void can_check_transmit_mailboxes()
 
     for (uint8_t i=0; i<3; i++)
     {
-        if ((hcan.Instance->TSR & error_flag[i])
-         &&(!(hcan.Instance->TSR & arbitration_lost_flag[i])))
+        if ((hcan.Instance->TSR & error_flag[i]))
+//         &&(!(hcan.Instance->TSR & arbitration_lost_flag[i])))
         {
             if (timeout_enabled[i])
             {
@@ -386,23 +399,28 @@ void can_process_rx() {
 
 
 inline bool can_transmitter_is_ready() {
-    // TODO: Implement using reference manual and registers...
-    return (bus_state == ON_BUS) && ((hcan.Instance->TSR & CAN_TSR_TME) > 0);
+    /*
+     * Check if transmitter mailbox 0 is empty
+     *
+     * Only mailbox 0 is used in order to simplify error detection
+     * and allow for re-sending of frames, which weren't sent.
+     */
+    return (bus_state == ON_BUS) && ((hcan.Instance->TSR & CAN_TSR_TME0) > 0);
 }
 
 
 void can_process_tx() {
 
     uint8_t buffer[SLCAN_MTU];
-    uint16_t length;
 
     if (can_transmitter_is_ready())
     {
         enter_critical();
-        if (fifo_has_slcan_command(&can_tx_fifo, &length)) {
+        if (fifo_has_slcan_command(&can_tx_fifo, &length_last_tx_frame)) {
 
             // Retrieve the oldest frame from the transmission buffer
-            if (fifo_pop(&can_tx_fifo, buffer, length))
+            if ((length_last_tx_frame != 0)
+             && (fifo_get(&can_tx_fifo, buffer, length_last_tx_frame)))
             {
                 exit_critical();
             }
@@ -414,11 +432,23 @@ void can_process_tx() {
 
             // Convert SLCAN transmit command to CAN frame
             hcan.pTxMsg = &can_tx_frame;
-            if (!slcan_parse_transmit_command(buffer, length, &can_tx_frame))
+            if (!slcan_parse_transmit_command(buffer, length_last_tx_frame, &can_tx_frame))
+            {
+                // Discard invalid command from FIFO
+                enter_critical();
+                fifo_drop_oldest(&can_tx_fifo, length_last_tx_frame);
+                exit_critical();
                 return;
+            }
 
             // Transmit frame to CAN bus
-            HAL_StatusTypeDef result = HAL_CAN_Transmit(&hcan, 300);
+            if (can_tx_frame.DLC != 8 || can_tx_frame.Data[7] != 0x88)
+            {
+                do {
+                    asm("nop");
+                } while (1);
+            }
+            HAL_StatusTypeDef result = HAL_CAN_Transmit_IT(&hcan);
             if (result == HAL_OK) {
                 led_on(LED_ACTIVITY);
             } else {
