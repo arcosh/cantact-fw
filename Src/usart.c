@@ -1,5 +1,8 @@
 
 #include "platform.h"
+
+#if PLATFORM == NUCLEO
+
 #include "usart.h"
 #include <stm32f0xx_hal.h>
 
@@ -55,3 +58,5 @@ int _write(int file, char *ptr, int len)
     HAL_UART_Transmit(&husart2, (uint8_t*) ptr, (uint16_t) len, 300);
     return len;
 }
+
+#endif
