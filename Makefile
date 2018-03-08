@@ -1,22 +1,16 @@
-# STM32F0xx Makefile
-# #####################################
-#
-# Part of the uCtools project
-# uctools.github.com
-#
 #######################################
 # user configuration:
 #######################################
 
-ifndef BUILD_NUMBER
-BUILD_NUMBER = $(shell git rev-parse --short HEAD)
-endif
+# git commit hash
+GIT_COMMIT = $(shell git rev-parse --short HEAD)
 
 # SOURCES: list of sources in the user application
 SOURCES = $(wildcard Src/*.c)
 
 # TARGET: name of the user application
-TARGET = CANtact
+PROJ_NAME = CANtact
+TARGET = $(PROJ_NAME)-$(GIT_COMMIT)
 
 # BUILD_DIR: directory to place output files in
 BUILD_DIR = build
@@ -25,7 +19,7 @@ BUILD_DIR = build
 LD_SCRIPT = STM32F042C6_FLASH.ld
 
 # USER_DEFS user defined macros
-USER_DEFS = -DCANTACT_BUILD_NUMBER=$(BUILD_NUMBER)
+USER_DEFS = -D GIT_COMMIT=$(GIT_COMMIT)
 
 # USB_INCLUDES: includes for the usb library
 USB_INCLUDES = -IMiddlewares/ST/STM32_USB_Device_Library/Core/Inc

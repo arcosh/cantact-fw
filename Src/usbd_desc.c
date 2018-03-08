@@ -59,14 +59,12 @@
 #define STRINGIZE_(x) #x
 #define STRINGIZE(x) STRINGIZE_(x)
 
-#define CANTACT_SW_VER      STRINGIZE(CANTACT_BUILD_NUMBER)
-
 #define USBD_VID			0xad50
 #define USBD_LANGID_STRING		1033
 #define USBD_MANUFACTURER_STRING	"Linklayer Labs, Toronto"
 #define USBD_PID_FS			0x60c4
-#define USBD_PRODUCT_STRING_FS		"CANtact" " " CANTACT_SW_VER
-#define USBD_SERIALNUMBER_STRING_FS     "00000000001A"
+#define USBD_PRODUCT_STRING_FS		"CANtact with firmware " STRINGIZE(GIT_COMMIT)
+#define USBD_SERIALNUMBER_STRING_FS     "STM32F042 lot xxxxxxx wafer xxx x-xxx y-xxx"
 #define USBD_CONFIGURATION_STRING_FS    "CDC Config"
 #define USBD_INTERFACE_STRING_FS	"CDC Interface"
 
