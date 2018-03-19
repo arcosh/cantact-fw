@@ -89,12 +89,13 @@ endif
 CFLAGS += $(DEFS) $(INCLUDES)
 CFLAGS += -std=gnu99
 CFLAGS += $(USER_CFLAGS)
+#CFLAGS += -fdiagnostic-color=auto
 
 # default action: build the user application
 all: $(BUILD_DIR)/$(TARGET).bin $(BUILD_DIR)/$(TARGET).hex
 
 flash: all
-	dfu-util -d 0483:df11 -c 1 -i 0 -a 0 -s 0x08000000 -D $(BUILD_DIR)/$(TARGET).bin
+	dfu-util -d 0483:df11 -c 1 -i 0 -a 0 -s 0x08000000:leave -D $(BUILD_DIR)/$(TARGET).bin
 
 flash_stlink: all
 	openocd -f "interface/stlink-v2-1.cfg" -f "target/stm32f0x.cfg" -c "init" -c "reset halt" -c "program $(BUILD_DIR)/$(TARGET).elf verify reset exit"
