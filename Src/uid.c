@@ -58,3 +58,19 @@ char* uid_get_lot_number()
     s[7] = '\0';
     return (char*) s;
 }
+
+
+void generate_usb_serialnumber_string(uint8_t* s)
+{
+    s = "STM32F042, lot ";
+    uint8_t cursor = strlen(s);
+    s[cursor] = uid_get_lot_number();
+    cursor += 7;
+    s[cursor] = ", wafer ";
+    cursor += 8;
+    s[cursor] = '\0';
+//    uint8_t* t = str(uid_get_wafer_number());
+//    s[cursor] = t;
+//    cursor += strlen(t);
+//     uid_get_lot_number(), uid_get_wafer_number(), uid_get_wafer_x(), uid_get_wafer_y());
+}
