@@ -8,6 +8,7 @@
  */
 
 #include <uid.h>
+#include <string.h>
 
 
 /**
@@ -24,6 +25,33 @@ static inline uint16_t bcd2int(uint16_t a)
             (((a & 0x00F0) >> 4) * 10) +
             (((a & 0x0F00) >> 8) * 100) +
             (((a & 0xF000) >> 12) * 1000);
+}
+
+static inline char int2digit(uint8_t i)
+{
+    return i + 0x30;
+}
+
+static inline char* uint8todigits(uint8_t i)
+{
+    static char result[4];
+    uint8_t cursor = 0;
+    uint8_t j;
+    j = i / 100;
+    if (j > 0)
+    {
+        result[cursor++] = int2digit(j);
+        i -= j*100;
+    }
+    j = i / 10;
+    if (j > 0)
+    {
+        result[cursor++] = int2digit(j);
+        i -= j*10;
+    }
+    result[cursor++] = int2digit(i);
+    result[cursor] = '\0';
+    return result;
 }
 
 
@@ -57,4 +85,17 @@ char* uid_get_lot_number()
     s[6] =  STM32_UID[2] & 0xFF;
     s[7] = '\0';
     return (char*) s;
+}
+
+
+void generate_usb_serialnumber_string(char* s)
+{
+    strcat(s, "STM32F042, production lot ");
+    strcat(s, uid_get_lot_number());
+    strcat(s, ", wafer ");
+    strcat(s, uint8todigits(uid_get_wafer_number()));
+    strcat(s, ", die position x=");
+    strcat(s, uint8todigits(uid_get_wafer_x()));
+    strcat(s, ",y=");
+    strcat(s, uint8todigits(uid_get_wafer_y()));
 }

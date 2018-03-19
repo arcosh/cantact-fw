@@ -37,6 +37,9 @@
 #include "usbd_core.h"
 #include "usbd_desc.h"
 #include "usbd_conf.h"
+
+#include "uid.h"
+
 /** @addtogroup STM32_USB_OTG_DEVICE_LIBRARY
   * @{
   */
@@ -64,7 +67,6 @@
 #define USBD_MANUFACTURER_STRING	"Linklayer Labs, Toronto"
 #define USBD_PID_FS			0x60c4
 #define USBD_PRODUCT_STRING_FS		"CANtact with firmware " STRINGIZE(GIT_COMMIT)
-#define USBD_SERIALNUMBER_STRING_FS     "STM32F042 lot xxxxxxx wafer xxx x-xxx y-xxx"
 #define USBD_CONFIGURATION_STRING_FS    "CDC Config"
 #define USBD_INTERFACE_STRING_FS	"CDC Interface"
 
@@ -222,26 +224,6 @@ uint8_t *  USBD_FS_ManufacturerStrDescriptor( USBD_SpeedTypeDef speed , uint16_t
   return USBD_StrDesc;
 }
 
-#define STM32_UUID ((uint32_t *)0x1FFFF7AC)
-static void IntToAscii (uint32_t value , uint8_t *pbuf , uint8_t len)
-{
-  uint8_t idx = 0;
-
-  for( idx = 0 ; idx < len ; idx ++)
-  {
-    if( ((value >> 28)) < 0xA )
-    {
-      pbuf[ idx ] = (value >> 28) + '0';
-    }
-    else
-    {
-      pbuf[ idx ] = (value >> 28) + 'A' - 10;
-    }
-
-    value = value << 4;
-    pbuf[ idx + 1] = 0;
-  }
-}
 /**
 * @brief  USBD_FS_SerialStrDescriptor
 *         return the serial number string descriptor
@@ -251,11 +233,10 @@ static void IntToAscii (uint32_t value , uint8_t *pbuf , uint8_t len)
 */
 uint8_t *  USBD_FS_SerialStrDescriptor( USBD_SpeedTypeDef speed , uint16_t *length)
 {
-  uint8_t s[0x100];
-  IntToAscii(STM32_UUID[0], &s[0], 8);
-  IntToAscii(STM32_UUID[1], &s[8], 8);
-  IntToAscii(STM32_UUID[2], &s[16], 8);
-  USBD_GetString (s, USBD_StrDesc, length);
+  uint8_t s[100];
+  memset(s, 0, 100);
+  generate_usb_serialnumber_string((char*) s);
+  USBD_GetString(s, USBD_StrDesc, length);
   return USBD_StrDesc;
 }
 
