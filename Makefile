@@ -173,6 +173,7 @@ $(BUILD_DIR)/$(TARGET).elf: $(OBJECTS) $(USB_OBJECTS) $(CUBELIB)
 		$(LDFLAGS) -Xlinker \
 		-Map=$(BUILD_DIR)/$(TARGET).map
 	$(SIZE) $@
+	cp $@ $(BUILD_DIR)/$(PROJ_NAME).elf
 
 $(BUILD_DIR)/%.o: Src/%.c | $(BUILD_DIR)
 	$(CC) $(CFLAGS) -Os -c -o $@ $^
