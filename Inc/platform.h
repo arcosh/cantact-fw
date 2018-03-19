@@ -7,8 +7,6 @@
 #ifndef PLATFORM_H
 #define PLATFORM_H
 
-#include <stm32f0xx_hal.h>
-
 #ifdef PLATFORM_CANTACT
 #define EXTERNAL_OSCILLATOR
 #define HSE_VALUE       16000000
@@ -17,6 +15,8 @@
 #ifdef PLATFORM_NUCLEO
 #define INTERNAL_OSCILLATOR
 #endif
+
+#include <stm32f0xx_hal.h>
 
 #ifdef PLATFORM_CANTACT
 #define PC_INTERFACE_USB
