@@ -8,6 +8,7 @@
  */
 
 #include <uid.h>
+#include <string.h>
 
 
 /**
@@ -24,6 +25,33 @@ static inline uint16_t bcd2int(uint16_t a)
             (((a & 0x00F0) >> 4) * 10) +
             (((a & 0x0F00) >> 8) * 100) +
             (((a & 0xF000) >> 12) * 1000);
+}
+
+static inline char int2digit(uint8_t i)
+{
+    return i + 0x30;
+}
+
+static inline char* uint8todigits(uint8_t i)
+{
+    static char result[4];
+    uint8_t cursor = 0;
+    uint8_t j;
+    j = i / 100;
+//    if (j > 0)
+//    {
+        result[cursor++] = int2digit(j);
+        i -= j*100;
+//    }
+    j = i / 10;
+//    if (j > 0)
+//    {
+        result[cursor++] = int2digit(j);
+        i -= j*10;
+//    }
+    result[cursor++] = int2digit(i);
+    result[cursor] = '\0';
+    return result;
 }
 
 
@@ -60,17 +88,23 @@ char* uid_get_lot_number()
 }
 
 
-void generate_usb_serialnumber_string(uint8_t* s)
+void generate_usb_serialnumber_string(char* s)
 {
-    s = "STM32F042, lot ";
-    uint8_t cursor = strlen(s);
-    s[cursor] = uid_get_lot_number();
+    memcpy(s, "STM32F042, lot ", 15);
+    uint8_t cursor = 15;
+    memcpy(s+cursor, uid_get_lot_number(), 7);
     cursor += 7;
-    s[cursor] = ", wafer ";
+    memcpy(s+cursor, ", wafer ", 8);
     cursor += 8;
+    memcpy(s+cursor, uint8todigits(uid_get_wafer_number()), 3);
+    cursor += 3;
+    memcpy(s+cursor, " @ x=", 5);
+    cursor += 5;
+    memcpy(s+cursor, uint8todigits(uid_get_wafer_x()), 3);
+    cursor += 3;
+    memcpy(s+cursor, ",y=", 3);
+    cursor += 3;
+    memcpy(s+cursor, uint8todigits(uid_get_wafer_y()), 3);
+    cursor += 3;
     s[cursor] = '\0';
-//    uint8_t* t = str(uid_get_wafer_number());
-//    s[cursor] = t;
-//    cursor += strlen(t);
-//     uid_get_lot_number(), uid_get_wafer_number(), uid_get_wafer_x(), uid_get_wafer_y());
 }

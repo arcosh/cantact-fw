@@ -37,4 +37,11 @@ uint16_t uid_get_wafer_x();
  */
 uint16_t uid_get_wafer_y();
 
+/**
+ * Generates a string to be used as
+ * this device's serial number string
+ * in the USB descriptor
+ */
+void generate_usb_serialnumber_string(char* s);
+
 #endif

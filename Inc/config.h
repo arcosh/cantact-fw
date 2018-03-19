@@ -25,8 +25,8 @@
 #endif
 
 #ifdef PLATFORM_CANTACT
-#define CAN_RX_BUFFER_SIZE      350
-#define CAN_TX_BUFFER_SIZE      350
+#define CAN_RX_BUFFER_SIZE      340
+#define CAN_TX_BUFFER_SIZE      340
 #endif
 
 #define CAN_TX_TIMEOUT          20
