@@ -7,7 +7,8 @@
 #include "can.h"
 #include "fifo.h"
 #include "slcan.h"
-#include <error.h>
+#include "error.h"
+#include "bootloader.h"
 
 
 int8_t slcan_parse_frame(CanRxMsgTypeDef* frame, uint8_t* buf) {
@@ -184,6 +185,8 @@ int8_t slcan_parse_command(uint8_t* buf, uint8_t len) {
             return SUCCESS;
         // error
         return ERROR_TX_FIFO_OVERRUN;
+    } else if (buf[0] == CANTACT_START_BOOTLOADER) {
+        jump_to_st_usb_bootloader();
     }
 
     return ERROR_SLCAN_COMMAND_NOT_RECOGNIZED;

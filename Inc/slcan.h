@@ -77,6 +77,7 @@ enum slcan_message_type {
     CANTACT_SET_MODE2 = 'M',
     CANTACT_SET_FILTER = 'F',
     CANTACT_SET_MASK = 'K',
+    CANTACT_START_BOOTLOADER = 'B',
 
     USBTIN_OPEN_LOOPBACK = 'I',
     USBTIN_OPEN_LISTEN_ONLY = 'L',
