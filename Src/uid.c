@@ -38,17 +38,17 @@ static inline char* uint8todigits(uint8_t i)
     uint8_t cursor = 0;
     uint8_t j;
     j = i / 100;
-//    if (j > 0)
-//    {
+    if (j > 0)
+    {
         result[cursor++] = int2digit(j);
         i -= j*100;
-//    }
+    }
     j = i / 10;
-//    if (j > 0)
-//    {
+    if (j > 0)
+    {
         result[cursor++] = int2digit(j);
         i -= j*10;
-//    }
+    }
     result[cursor++] = int2digit(i);
     result[cursor] = '\0';
     return result;
@@ -90,21 +90,12 @@ char* uid_get_lot_number()
 
 void generate_usb_serialnumber_string(char* s)
 {
-    memcpy(s, "STM32F042, lot ", 15);
-    uint8_t cursor = 15;
-    memcpy(s+cursor, uid_get_lot_number(), 7);
-    cursor += 7;
-    memcpy(s+cursor, ", wafer ", 8);
-    cursor += 8;
-    memcpy(s+cursor, uint8todigits(uid_get_wafer_number()), 3);
-    cursor += 3;
-    memcpy(s+cursor, " @ x=", 5);
-    cursor += 5;
-    memcpy(s+cursor, uint8todigits(uid_get_wafer_x()), 3);
-    cursor += 3;
-    memcpy(s+cursor, ",y=", 3);
-    cursor += 3;
-    memcpy(s+cursor, uint8todigits(uid_get_wafer_y()), 3);
-    cursor += 3;
-    s[cursor] = '\0';
+    strcat(s, "STM32F042, production lot ");
+    strcat(s, uid_get_lot_number());
+    strcat(s, ", wafer ");
+    strcat(s, uint8todigits(uid_get_wafer_number()));
+    strcat(s, ", die position x=");
+    strcat(s, uint8todigits(uid_get_wafer_x()));
+    strcat(s, ",y=");
+    strcat(s, uint8todigits(uid_get_wafer_y()));
 }

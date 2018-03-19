@@ -233,7 +233,8 @@ uint8_t *  USBD_FS_ManufacturerStrDescriptor( USBD_SpeedTypeDef speed , uint16_t
 */
 uint8_t *  USBD_FS_SerialStrDescriptor( USBD_SpeedTypeDef speed , uint16_t *length)
 {
-  uint8_t s[0x100];
+  uint8_t s[100];
+  memset(s, 0, 100);
   generate_usb_serialnumber_string((char*) s);
   USBD_GetString(s, USBD_StrDesc, length);
   return USBD_StrDesc;
