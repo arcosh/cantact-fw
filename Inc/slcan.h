@@ -8,7 +8,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include "stm32f0xx_hal.h"
+#include "can.h"
 
 
 /**
@@ -93,7 +93,7 @@ enum slcan_message_type {
  * @param  frame: Pointer to CAN frame received from CAN interface
  * @return Number of bytes in generated SLCAN message
  */
-int8_t slcan_parse_frame(CanRxMsgTypeDef* frame, uint8_t* buf);
+uint8_t slcan_parse_frame(can_frame_t* frame, uint8_t* buf);
 
 
 /**

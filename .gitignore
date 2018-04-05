@@ -5,6 +5,7 @@ build
 *.lo
 *.la
 *.elf
+*.bin
 *.map
 
 # Eclipse

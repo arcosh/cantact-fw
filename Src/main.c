@@ -34,7 +34,7 @@ int main()
     // Loop forever
     for (;;)
     {
-        can_process();
-        led_process();
+        process_can();
+        process_led();
     }
 }

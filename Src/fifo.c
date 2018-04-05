@@ -2,17 +2,6 @@
 #include "fifo.h"
 
 
-void fifo_init(fifo_t* fifo, uint8_t* buffer, uint16_t size)
-{
-    fifo->buffer = buffer;
-    fifo->size = size;
-
-    // Reset byte indices
-    fifo->push_index = 0;
-    fifo->pop_index = 0;
-}
-
-
 bool fifo_has_room(fifo_t* fifo, uint8_t length)
 {
     // The buffer can't store more than buffer size-1 bytes.
@@ -32,14 +21,6 @@ bool fifo_has_room(fifo_t* fifo, uint8_t length)
 }
 
 
-
-bool fifo_is_empty(fifo_t* fifo)
-{
-    // When the push_index is shifted against the pop_index, data is available for popping.
-    return (fifo->pop_index == fifo->push_index);
-}
-
-
 uint16_t fifo_get_length(fifo_t* fifo)
 {
     if (fifo->push_index < fifo->pop_index)
@@ -55,60 +36,68 @@ uint16_t fifo_get_length(fifo_t* fifo)
 }
 
 
-bool fifo_has_slcan_command(fifo_t* fifo, uint16_t* length)
-{
-    *length = 0;
-    if (fifo_is_empty(fifo))
-        return false;
-
-    uint16_t l = fifo_get_length(fifo);
-    for (uint16_t i=0; i<l; i++)
-    {
-        uint16_t index = fifo->pop_index + i;
-        if (index >= fifo->size)
-            index -= fifo->size;
-        if (fifo->buffer[index] == SLCAN_COMMAND_TERMINATOR)
-        {
-            *length = i+1;
-            return true;
-        }
-    }
-
-    return false;
-}
-
-
 bool fifo_push(fifo_t* fifo, uint8_t* data, uint16_t length)
 {
-    if (!fifo_has_room(fifo, length))
-        // There is not enough free space in the buffer.
-        return false;
-
     for (uint16_t i=0; i<length; i++)
     {
         // Copy byte to buffer
         fifo->buffer[fifo->push_index] = data[i];
 
         // Increment the push_index
-        fifo->push_index = (fifo->push_index + 1) % fifo->size;
+        uint16_t j = fifo->push_index + 1;
+        while (j >= fifo->size)
+        {
+            j -= fifo->size;
+        }
+        fifo->push_index = j;
     }
     return true;
 }
 
 
-bool fifo_pop(fifo_t* fifo, uint8_t* data, uint16_t length)
+void fifo_pop(fifo_t* fifo, uint8_t* data, uint16_t length)
 {
-    if (fifo_get_length(fifo) < length)
-        // There is fewer bytes in the buffer than requested.
-        return false;
-
     for (uint16_t i=0; i<length; i++)
     {
         // Copy byte from buffer
         data[i] = fifo->buffer[fifo->pop_index];
 
         // Increment the pop_index
-        fifo->pop_index = (fifo->pop_index + 1) % fifo->size;
+        uint16_t j = fifo->pop_index + 1;
+        while (j >= fifo->pop_index)
+        {
+            j -= fifo->size;
+        }
+        fifo->pop_index = j;
     }
-    return true;
+}
+
+
+void fifo_copy(fifo_t* fifo, uint8_t* buffer, uint16_t length)
+{
+    uint16_t j = fifo->pop_index;
+
+    for (uint16_t i=0; i<length; i++)
+    {
+        // Copy byte from buffer
+        data[i] = fifo->buffer[j++];
+
+        while (j >= fifo->size)
+        {
+            j -= fifo->size;
+        }
+    }
+}
+
+
+void fifo_discard(fifo_t* fifo, uint16_t size)
+{
+    // Copy value to temporary variable to avoid problems with interrupts reading/writing the pop_index
+    uint16_t j = fifo->pop_index;
+    j += size;
+    while (j >= fifo->size)
+    {
+        j -= fifo->size;
+    }
+    fifo->pop_index = j;
 }

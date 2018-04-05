@@ -52,7 +52,7 @@ void led_off(led_index_t);
 /**
  * Switches the LED off after @ref LED_ON_DURATION iterations
  */
-void led_process();
+void process_led();
 
 
 #endif

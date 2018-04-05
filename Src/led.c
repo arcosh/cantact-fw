@@ -111,7 +111,7 @@ void led_off(led_index_t led)
 }
 
 
-void led_process()
+void process_led()
 {
     #ifdef LED_ACTIVITY_ENABLED
     if ((HAL_GPIO_ReadPin(LED_ACTIVITY_PORT, LED_ACTIVITY_PIN) == GPIO_PIN_RESET)

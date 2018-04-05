@@ -1,6 +1,6 @@
 
 #include "clock.h"
-#include "stm32f0xx_hal.h"
+
 #include "platform.h"
 #include "config.h"
 
@@ -87,4 +87,12 @@ void SysTick_Handler()
 {
     HAL_IncTick();
     HAL_SYSTICK_IRQHandler();
+}
+
+
+uint32_t get_time()
+{
+    // TODO
+    // See cvra-bootloader...
+    return 0;
 }

@@ -6,6 +6,8 @@
 #ifndef _CAN_H
 #define _CAN_H
 
+#include <stdint.h>
+#include <stdbool.h>
 #include "stm32f0xx_hal.h"
 #include "can_timing.h"
 
@@ -31,6 +33,19 @@ enum can_bus_state {
     OFF_BUS,
     ON_BUS
 };
+
+/**
+ * A simplified and less memory-consuming frame-storing struct
+ */
+typedef struct
+{
+    uint32_t id:29;
+    bool     is_extended_id:1;
+    bool     is_rtr:1;
+    uint8_t  dlc:4;
+    uint8_t  data[8];
+} can_frame_t;
+
 
 /**
  * Prepare CAN bus peripheral for initialization
@@ -75,6 +90,6 @@ void can_check_transmit_mailboxes();
 /**
  * Perform all CAN-related tasks in the queue
  */
-void can_process();
+void process_can();
 
 #endif // _CAN_H

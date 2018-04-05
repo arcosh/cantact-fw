@@ -10,7 +10,7 @@
 #include <error.h>
 
 
-int8_t slcan_parse_frame(CanRxMsgTypeDef* frame, uint8_t* buf) {
+uint8_t slcan_parse_frame(can_frame_t* frame, uint8_t* buf) {
     uint8_t i = 0;
     uint8_t id_len, j;
     uint32_t tmp;
@@ -20,21 +20,20 @@ int8_t slcan_parse_frame(CanRxMsgTypeDef* frame, uint8_t* buf) {
     }
 
     // add character for frame type
-    if (frame->RTR == CAN_RTR_DATA) {
-        buf[i] = 't';
-    } else if (frame->RTR == CAN_RTR_REMOTE) {
+    if (frame->is_rtr) {
         buf[i] = 'r';
+    } else {
+        buf[i] = 't';
     }
 
     // assume standard identifier
     id_len = SLCAN_STD_ID_LEN;
-    tmp = frame->StdId;
+    tmp = frame->id;
     // check if extended
-    if (frame->IDE == CAN_ID_EXT) {
+    if (frame->is_extended_id) {
         // convert first char to upper case for extended frame
         buf[i] -= 32;
         id_len = SLCAN_EXT_ID_LEN;
-        tmp = frame->ExtId;
     }
     i++;
 
@@ -47,12 +46,12 @@ int8_t slcan_parse_frame(CanRxMsgTypeDef* frame, uint8_t* buf) {
     }
 
     // add DLC to buffer
-    buf[i++] = frame->DLC;
+    buf[i++] = frame->dlc;
 
     // add data bytes
-    for (j = 0; j < frame->DLC; j++) {
-        buf[i++] = (frame->Data[j] >> 4);
-        buf[i++] = (frame->Data[j] & 0x0F);
+    for (j = 0; j < frame->dlc; j++) {
+        buf[i++] = (frame->data[j] >> 4);
+        buf[i++] = (frame->data[j] & 0x0F);
     }
 
     // convert to ASCII (2nd character to end)
@@ -178,12 +177,16 @@ int8_t slcan_parse_command(uint8_t* buf, uint8_t len) {
             || (buf[0] == SLCAN_TRANSMIT_EXTENDED)
             || (buf[0] == SLCAN_TRANSMIT_REQUEST_STANDARD)
             || (buf[0] == SLCAN_TRANSMIT_REQUEST_EXTENDED)) {
-        extern fifo_t can_tx_fifo;
-        if (fifo_push(&can_tx_fifo, buf, len))
-            // ok
+        extern fifo_t can_tx_serial_fifo;
+        if (fifo_has_room(&can_tx_serial_fifo, len))
+        {
+            fifo_push(&can_tx_serial_fifo, buf, len);
             return SUCCESS;
-        // error
-        return ERROR_TX_FIFO_OVERRUN;
+        }
+        else
+        {
+            return ERROR_TX_FIFO_OVERRUN;
+        }
     }
 
     return ERROR_SLCAN_COMMAND_NOT_RECOGNIZED;

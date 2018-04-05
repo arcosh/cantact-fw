@@ -4,11 +4,14 @@
  */
 
 #include "can.h"
+
 #include "platform.h"
 #include "config.h"
+
 #include "slcan.h"
 #include "led.h"
 #include "fifo.h"
+#include "buffering.h"
 
 #include "usbd_cdc_if.h"
 #include "usart.h"
@@ -29,35 +32,16 @@ static uint32_t prescaler;
  */
 enum can_bus_state bus_state;
 
-/**
- * Reception buffer for one frame
- */
-CanRxMsgTypeDef can_rx_frame;
 
-/**
- * Transmission buffer for one frame
- */
-CanTxMsgTypeDef can_tx_frame;
-
-/**
- * Buffer for incoming CAN frames
- */
-uint8_t can_rx_buffer[CAN_RX_BUFFER_SIZE];
-fifo_t can_rx_fifo;
-
-/**
- * Buffer for outgoing SLCAN frames
- */
-uint8_t can_tx_buffer[CAN_TX_BUFFER_SIZE];
-fifo_t can_tx_fifo;
-
-
-void can_init(void) {
+void can_init(void)
+{
     // Default speed: 1 Mbps
     hcan.Instance = CAN_PERIPHERAL;
     prescaler = CAN_PRESCALER_1000K;
     // Reset bxCAN peripheral
     can_disable();
+
+    buffering_init();
 }
 
 
@@ -102,23 +86,32 @@ void HAL_CAN_MspDeInit(CAN_HandleTypeDef* hcan)
 
 void HAL_CAN_RxCpltCallback(CAN_HandleTypeDef* hcan)
 {
-    // Convert frame to SLCAN string
-    uint8_t buffer[SLCAN_MTU];
-    uint16_t length = slcan_parse_frame(hcan->pRxMsg, buffer);
+    // Copy frame to simple type
+    can_frame_t frame;
+    frame.dlc = hcan->pRxMsg->DLC;
+    // TODO: Support ExtID and RTR
+    frame.id = hcan->pRxMsg->StdId;
+    frame.is_extended_id = false;
+    frame.is_rtr = false;
+    for (uint8_t i=0; i<frame.dlc; i++)
+    {
+        frame.data[i] = hcan->pRxMsg->Data[i];
+    }
 
-    // Append SLCAN string to buffer
-    fifo_push(&can_rx_fifo, buffer, length);
+    // Push one frame to the RX frame buffer
+    fifo_push(&can_rx_frame_fifo, (uint8_t*) (&frame), sizeof(can_frame_t));
 
     // Receive more frames
-    HAL_CAN_Receive_IT(hcan, CAN_FIFO0);
+//    HAL_CAN_Receive_IT(hcan, CAN_FIFO0);
+    __HAL_CAN_ENABLE_IT(hcan, CAN_IT_FMP0);
 }
 
 
-void HAL_CAN_TxCpltCallback(CAN_HandleTypeDef *hcan)
-{
-    // Remove last transmitted frame from buffer
+//void HAL_CAN_TxCpltCallback(CAN_HandleTypeDef *hcan)
+//{
+//    // Remove last transmitted frame from buffer
 //    fifo_drop_oldest_entry(&can_tx_fifo);
-}
+//}
 
 
 void HAL_CAN_ErrorCallback(CAN_HandleTypeDef *hcan)
@@ -211,7 +204,9 @@ void can_enable(void) {
     HAL_NVIC_SetPriority(CEC_CAN_IRQn, IRQ_PRIORITY_CAN, 0);
     HAL_NVIC_EnableIRQ(CEC_CAN_IRQn);
 
-    HAL_CAN_Receive_IT(&hcan, CAN_FIFO0);
+//    HAL_CAN_Receive_IT(&hcan, CAN_FIFO0);
+//    __HAL_CAN_ENABLE_IT(&hcan, CAN_IT_FMP0);
+    hcan.Instance->IER = CAN_IT_FMP0;
 }
 
 
@@ -219,11 +214,12 @@ void can_disable(void) {
     // Disable interrupts
     HAL_NVIC_DisableIRQ(CEC_CAN_IRQn);
 
+    bus_state = OFF_BUS;
+
     // Reset bxCAN peripheral (set RESET bit to 1)
     hcan.Instance->MCR |= CAN_MCR_RESET;
     // Wait until sleep mode is reached
     while ((hcan.Instance->MSR & CAN_MSR_SLAK) == 0);
-    bus_state = OFF_BUS;
 
     led_off(LED_ERROR);
 }
@@ -310,137 +306,12 @@ void can_set_silent(uint8_t silent) {
 }
 
 
-void can_check_transmit_mailboxes()
-{
-    static bool timeout_enabled[3] = {false, false, false};
-    static uint32_t timeout_start_ms[3];
-    const uint32_t error_flag[3] = {CAN_TSR_TERR0, CAN_TSR_TERR1, CAN_TSR_TERR2};
-    const uint32_t arbitration_lost_flag[3] = {CAN_TSR_ALST0, CAN_TSR_ALST1, CAN_TSR_ALST2};
-    const uint32_t abort_transmission_switch[3] = {CAN_TSR_ABRQ0, CAN_TSR_ABRQ1, CAN_TSR_ABRQ2};
-
-    for (uint8_t i=0; i<3; i++)
-    {
-        if ((hcan.Instance->TSR & error_flag[i])
-         &&(!(hcan.Instance->TSR & arbitration_lost_flag[i])))
-        {
-            if (timeout_enabled[i])
-            {
-                if (HAL_GetTick() - timeout_start_ms[i] > CAN_TX_TIMEOUT)
-                {
-                    // Abort transmission
-                    timeout_enabled[i] = false;
-                    hcan.Instance->TSR |= abort_transmission_switch[i];
-                    hcan.Instance->TSR &= ~error_flag[i];
-                    led_on(LED_ERROR);
-                }
-            }
-            else
-            {
-                // Enable timeout for this mailbox
-                timeout_start_ms[i] = HAL_GetTick();
-                timeout_enabled[i] = true;
-            }
-        }
-    }
-}
-
-
-void can_process_rx() {
-
-    uint8_t buffer[SLCAN_MTU];
-    uint16_t length;
-
-    enter_critical();
-    if (fifo_has_slcan_command(&can_rx_fifo, &length)) {
-
-        // Retrieve oldest SLCAN-encoded frame from reception buffer
-        if (fifo_pop(&can_rx_fifo, buffer, length))
-        {
-            exit_critical();
-        }
-        else
-        {
-            exit_critical();
-            return;
-        }
-
-        // Transmit SLCAN string to PC
-        // via USB
-        #ifdef PC_INTERFACE_USB
-        uint8_t result = CDC_Transmit_FS(buffer, length);
-        if (result == USBD_OK) {
-            led_on(LED_ACTIVITY);
-        } else {
-            led_on(LED_ERROR);
-        }
-        #endif
-        #ifdef PC_INTERFACE_UART
-        _write(0, (char*) buffer, length);
-        #endif
-    }
-    else
-    {
-        exit_critical();
-    }
-}
-
-
-inline bool can_transmitter_is_ready() {
-    // TODO: Implement using reference manual and registers...
-    return (bus_state == ON_BUS) && ((hcan.Instance->TSR & CAN_TSR_TME) > 0);
-}
-
-
-void can_process_tx() {
-
-    uint8_t buffer[SLCAN_MTU];
-    uint16_t length;
-
-    if (can_transmitter_is_ready())
-    {
-        enter_critical();
-        if (fifo_has_slcan_command(&can_tx_fifo, &length)) {
-
-            // Retrieve the oldest frame from the transmission buffer
-            if (fifo_pop(&can_tx_fifo, buffer, length))
-            {
-                exit_critical();
-            }
-            else
-            {
-                exit_critical();
-                return;
-            }
-
-            // Convert SLCAN transmit command to CAN frame
-            hcan.pTxMsg = &can_tx_frame;
-            if (!slcan_parse_transmit_command(buffer, length, &can_tx_frame))
-                return;
-
-            // Transmit frame to CAN bus
-            HAL_StatusTypeDef result = HAL_CAN_Transmit(&hcan, 300);
-            if (result == HAL_OK) {
-                led_on(LED_ACTIVITY);
-            } else {
-                led_on(LED_ERROR);
-            }
-        }
-        else
-        {
-            exit_critical();
-        }
-    }
-}
-
-
 void can_process() {
     if (bus_state != ON_BUS)
         return;
-    can_process_rx();
-    can_process_tx();
 
-    // Make sure, the transmitter won't become permanently blocked
-    can_check_transmit_mailboxes();
-    // Make sure, the receiver is always on
-//    __HAL_CAN_ENABLE_IT(&hcan, CAN_IT_FMP0);
+    process_rx_frame_buffer();
+    process_rx_serial_buffer();
+    process_tx_serial_buffer();
+    process_tx_frame_buffer();
 }
