@@ -155,7 +155,7 @@ int8_t slcan_parse_command(uint8_t* buf, uint8_t len) {
             id += hex2int(buf[i]);
         }
         current_filter_id = id;
-        can_set_filter(current_filter_id, current_filter_mask);
+//        can_set_filter(current_filter_id, current_filter_mask);
         return SUCCESS;
 
     } else if (buf[0] == SLCAN_SET_ACCEPTANCE_MASK) {
@@ -171,7 +171,7 @@ int8_t slcan_parse_command(uint8_t* buf, uint8_t len) {
             mask += hex2int(buf[i]);
         }
         current_filter_mask = mask;
-        can_set_filter(current_filter_id, current_filter_mask);
+//        can_set_filter(current_filter_id, current_filter_mask);
         return SUCCESS;
 
     } else if ((buf[0] == SLCAN_TRANSMIT_STANDARD)

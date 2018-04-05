@@ -51,6 +51,11 @@ fifo_t can_rx_fifo;
 uint8_t can_tx_buffer[CAN_TX_BUFFER_SIZE];
 fifo_t can_tx_fifo;
 
+/**
+ * Counter variable selecting the next free filter slot
+ */
+static uint16_t filter_number = 0;
+
 
 void can_init(void) {
     // Default speed: 1 Mbps
@@ -205,7 +210,11 @@ void can_enable(void) {
     bus_state = ON_BUS;
 
     // No filtering: Receive all frames
-    can_set_filter(0, 0);
+//    can_set_filter(0, 0);
+    can_set_filter(0x000, 0x7ffffff);
+    can_set_filter(0x080, 0x7ffffff);
+    can_set_filter(0x001, 0x7ffffff);
+    can_set_filter(0x081, 0x7ffffff);
 
     // Enable interrupts
     HAL_NVIC_SetPriority(CEC_CAN_IRQn, IRQ_PRIORITY_CAN, 0);
@@ -218,6 +227,12 @@ void can_enable(void) {
 void can_disable(void) {
     // Disable interrupts
     HAL_NVIC_DisableIRQ(CEC_CAN_IRQn);
+
+    // Clear FIFOs
+    can_rx_fifo.push_index = 0;
+    can_rx_fifo.pop_index = 0;
+    can_tx_fifo.push_index = 0;
+    can_tx_fifo.pop_index = 0;
 
     // Reset bxCAN peripheral (set RESET bit to 1)
     hcan.Instance->MCR |= CAN_MCR_RESET;
@@ -269,6 +284,7 @@ void can_set_bitrate(enum can_bitrate bitrate) {
 
 
 void can_set_filter(uint32_t id, uint32_t mask) {
+
     CAN_FilterConfTypeDef filter;
 
     // see page 825 of RM0091 for details on filters
@@ -288,7 +304,7 @@ void can_set_filter(uint32_t id, uint32_t mask) {
 
     filter.FilterMode = CAN_FILTERMODE_IDMASK;
     filter.FilterScale = CAN_FILTERSCALE_32BIT;
-    filter.FilterNumber = 0;
+    filter.FilterNumber = filter_number++;
     filter.FilterFIFOAssignment = CAN_FIFO0;
     filter.BankNumber = 0;
     filter.FilterActivation = ENABLE;
