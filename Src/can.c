@@ -211,6 +211,7 @@ void can_enable(void) {
 
     // No filtering: Receive all frames
 //    can_set_filter(0, 0);
+    filter_number = 0;
     can_set_filter(0x000, 0x7ffffff);
     can_set_filter(0x080, 0x7ffffff);
     can_set_filter(0x001, 0x7ffffff);
