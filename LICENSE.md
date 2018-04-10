@@ -1,6 +1,14 @@
 # Licenses
 
-## CANtact Sources
+## CANtact firmware
+
+### Code by Matthias Bock
+
+The GNU General Public License - Version 3
+
+https://www.gnu.org/licenses/gpl-3.0.en.html
+
+### Code by Eric Evenchic
 
 The MIT License (MIT)
 
@@ -26,10 +34,10 @@ THE SOFTWARE.
 
 ## STM32 HAL
 
-The HAL is distributed under a non-restrictive BSD (Berkeley Software 
-Distribution) license.
+The HAL is distributed under a non-restrictive BSD (Berkeley Software Distribution) license.
 
 ## STM32 USB Library
-Code from the STM32 USB library is licensed under ST Micro's [Liberty V2
-License](http://www.st.com/software_license_agreement_liberty_v2)
 
+Code from the STM32 USB library is licensed under ST Micro's Liberty V2 License
+
+http://www.st.com/software_license_agreement_liberty_v2
