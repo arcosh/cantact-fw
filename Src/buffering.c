@@ -48,56 +48,28 @@ void buffering_init()
 }
 
 
-/**
- * Returns whether the buffer contains at least one complete SLCAN command
- * i.e. a string terminated by a carriage return character
- */
-static bool fifo_has_slcan_command(fifo_t* fifo, uint16_t* length)
-{
-    *length = 0;
-    if (fifo_is_empty(fifo))
-        return false;
-
-    uint16_t l = fifo_get_length(fifo);
-    uint16_t index = fifo->pop_index;
-    for (uint16_t i=0; i<l; i++)
-    {
-        while (index >= fifo->size)
-        {
-            index -= fifo->size;
-        }
-        if (fifo->buffer[index] == SLCAN_COMMAND_TERMINATOR)
-        {
-            *length = i+1;
-            return true;
-        }
-        index++;
-    }
-
-    return false;
-}
-
-
 void process_rx_frame_buffer()
 {
     if (fifo_is_empty(&can_rx_frame_fifo))
+        // Nothing in source FIFO
         return;
 
     if (can_rx_frame_fifo.element_count == 0)
+        // No frames in source FIFO
         return;
 
     if (!fifo_has_room(&can_rx_serial_fifo, SLCAN_MTU))
+        // Not enough room in target FIFO
         return;
 
-    // From where to read
-    can_frame_t* frame = &(can_rx_frame_buffer[can_rx_frame_fifo.pop_index]);
+    // Pop one frame from FIFO
+    can_frame_t frame;
+    fifo_pop(&can_rx_frame_fifo, &frame, sizeof(can_frame_t));
 
     // Convert frame to SLCAN string
     uint8_t slcan_frame[SLCAN_MTU];
-    uint8_t length = slcan_parse_frame(frame, slcan_frame);
-
-    // Discard frame
-    fifo_discard(&can_rx_frame_fifo, sizeof(can_frame_t));
+    uint8_t length;
+    slcan_parse_frame(&frame, &slcan_frame, &length);
 
     // Append SLCAN string to buffer
     fifo_push(&can_rx_serial_fifo, slcan_frame, length);
@@ -106,11 +78,16 @@ void process_rx_frame_buffer()
 
 void process_rx_serial_buffer()
 {
-    if (fifo_is_empty(&can_rx_serial_fifo))
+    if (fifo_is_empty(&can_rx_frame_fifo))
+        // Nothing in source FIFO
         return;
 
-    uint16_t length;
-    if (!fifo_has_slcan_command(&can_rx_serial_fifo, &length))
+    if (can_rx_frame_fifo.element_count == 0)
+        // No frames in source FIFO
+        return;
+
+    if (!USB ready for transmission)
+        // Not enough room in target FIFO
         return;
 
     // Retrieve oldest SLCAN-encoded frame from reception buffer
@@ -159,17 +136,19 @@ void process_tx_serial_buffer()
 void process_tx_frame_buffer()
 {
     if ((hcan.Instance->TSR & CAN_TSR_TME) == 0)
+        // No free transmitter mailbox available
         return;
 
     if (fifo_is_empty(&can_tx_frame_fifo))
+        // No frames ready for transmission
         return;
 
-    // Copy one frame from the buffer
+    // Pop one frame from the FIFO
     can_frame_t frame;
     fifo_pop(&can_rx_frame_fifo, (uint8_t*) (&frame), sizeof(can_frame_t));
 
     if (frame.dlc > 8)
-        // Discard invalid frame
+        // Invalid frame; discard
         return;
 
     // Convert simple frame to HAL frame
@@ -206,7 +185,7 @@ void process_tx_frame_buffer()
         return;
     }
 
-    /* Set up the Id */
+    /* Set up the  */
     hcan.Instance->sTxMailBox[transmitmailbox].TIR = 0;
     if (can_tx_frame.IDE == CAN_ID_STD)
     {

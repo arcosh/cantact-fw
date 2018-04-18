@@ -88,7 +88,7 @@ bool fifo_has_room(fifo_t* fifo, uint8_t length);
 void fifo_push(fifo_t* fifo, uint8_t* data, uint16_t length);
 
 /**
- * Retrieve data from the buffer
+ * Copy and delete data from the buffer
  *
  * @param fifo      Buffer to retrieve data from
  * @param data      Buffer to write data to
@@ -97,7 +97,11 @@ void fifo_push(fifo_t* fifo, uint8_t* data, uint16_t length);
 void fifo_pop(fifo_t* fifo, uint8_t* data, uint16_t length);
 
 /**
- * Retrieve data from the buffer without deleting it from the buffer
+ * Copy data from the buffer (without deleting it)
+ *
+ * @param fifo      Buffer to retrieve data from
+ * @param data      Buffer to write data to
+ * @param length    Number of bytes to retrieve from the buffer
  */
 void fifo_copy(fifo_t* fifo, uint8_t* buffer, uint16_t length);
 
